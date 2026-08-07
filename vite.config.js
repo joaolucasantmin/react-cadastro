@@ -4,5 +4,6 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
   ],
+  base: "/react-cadastro"
    
 });
