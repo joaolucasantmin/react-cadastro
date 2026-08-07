@@ -1,11 +1,11 @@
 import { useState } from "react";
-import api from '/src/services/api'
 import { useNavigate } from "react-router-dom";
 
 import { FaEnvelope, FaLock, FaShieldAlt } from "react-icons/fa";
 import { AiFillEdit } from "react-icons/ai";
-import logo from "/src/assets/logo.png";
-import fundo from "/src/assets/fundo.jpg";
+import logo from "../../assets/logo.png";
+import fundo from "../../assets/fundo.jpg";
+import api from "../../services/api";
 
 export default function Cadastro() {
         const navigate = useNavigate();
@@ -75,7 +75,12 @@ export default function Cadastro() {
 
     return (
         //Fundo
-        <main className="min-h-screen flex items-center justify-center min-h bg-[url(/src/assets/fundo.jpg)] bg-cover bg-[center_82%] bg-no-repeat">
+        <main className="min-h-screen flex items-center justify-center bg-cover bg-no-repeat"
+            style={{
+            backgroundImage: `url(${fundo})`,
+            backgroundPosition: "center 82%",
+        }}>
+        
 
             <div className="w-[450px] rounded-3xl bg-white shadow-xl px-8 py-10">
 
