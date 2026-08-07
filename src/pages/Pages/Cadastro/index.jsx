@@ -1,7 +1,3 @@
 export default function Cadastro() {
-  return (
-    <h1 style={{ color: "black", fontSize: "40px" }}>
-      Cadastro funcionando!
-    </h1>
-  );
+  return <h1>Cadastro funcionando!</h1>;
 }
