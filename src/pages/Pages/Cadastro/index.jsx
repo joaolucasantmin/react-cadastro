@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 
 import { FaEnvelope, FaLock, FaShieldAlt } from "react-icons/fa";
 import { AiFillEdit } from "react-icons/ai";
-import logo from "../../assets/logo.png";
-import fundo from "../../assets/fundo.jpg";
-import api from "../../services/api";
+import logo from "../../../assets/logo.png";
+import fundo from "../../../assets/fundo.jpg";
+import api from "../../../services/api";
 
 export default function Cadastro() {
         const navigate = useNavigate();
