@@ -183,12 +183,9 @@ export default function Cadastro() {
                     {/* Link */}
                     <p className="text-center text-sm text-gray-500">
                         Já tem uma conta?{" "}
-                        <a
-                            href="/login"
-                            className="font-medium text-orange-500 hover:underline"
-                        >
-                            Faça o Login
-                        </a>
+                        <Link to="/login" className="font-medium text-orange-500 hover:underline">
+                            Faça o login
+                        </Link>
                     </p>
 
                 </form>
