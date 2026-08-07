@@ -6,6 +6,7 @@ import { AiFillEdit } from "react-icons/ai";
 import logo from "../../../assets/logo.png";
 import fundo from "../../../assets/fundo.jpg";
 import api from "../../../services/api";
+import { Link } from "react-router-dom";
 
 export default function Cadastro() {
         const navigate = useNavigate();
