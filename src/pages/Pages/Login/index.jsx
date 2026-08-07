@@ -6,6 +6,7 @@ import { FaEnvelope, FaLock, FaShieldAlt } from "react-icons/fa";
 import { AiFillEdit } from "react-icons/ai";
 import logo from "/src/assets/logo.png";
 import fundo from "/src/assets/fundo.jpg";
+import { Link } from "react-router-dom";
 
 export default function Login() {
         const navigate = useNavigate();
@@ -123,13 +124,10 @@ export default function Login() {
 
                     {/* Link */}
                     <p className="text-center text-sm text-gray-500">
-                        Não tem uma conta??{" "}
-                        <a
-                            href="/cadastro"
-                            className="font-medium text-orange-500 hover:underline"
-                        >
-                            Faça o Cadastro
-                        </a>
+                        Não tem uma conta?{" "}
+                        <Link to="/cadastro" className="font-medium text-orange-500 hover:underline">
+                            Faça o cadastro
+                        </Link>
                     </p>
 
                 </form>
