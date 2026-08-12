@@ -44,8 +44,8 @@ export default function Login() {
 
                     localStorage.setItem('token', token);
 
-                    console.log(token)
-                    alert("Login ok!")
+                    //console.log(token)  DEIXE COMENTADO PARA NAO EXPOR TOKEN
+                    //alert("Login ok!")
 
                     navigate("/home");
 
