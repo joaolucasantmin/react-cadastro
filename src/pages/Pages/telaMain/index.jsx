@@ -8,6 +8,7 @@ import {
   FaPaperPlane,
   FaSignOutAlt,
   FaUserCircle,
+  FaArrowLeft,
 } from "react-icons/fa";
 import logo from "/src/assets/logo.png";
 
@@ -80,6 +81,10 @@ export default function Home() {
   const [texto, setTexto] = useState("");
   const [busca, setBusca] = useState("");
 
+  // No mobile só um painel aparece por vez: lista de conversas OU chat aberto.
+  // A partir do breakpoint md, os dois painéis ficam sempre visíveis lado a lado.
+  const [chatAberto, setChatAberto] = useState(false);
+
   const scrollRef = useRef(null);
 
   // -------------------------------------------------------------------------
@@ -124,6 +129,11 @@ export default function Home() {
   const handleSelecionarContato = (contato) => {
     setContatoSelecionado(contato);
     setMensagens(MENSAGENS_MOCK[contato.id] || []);
+    setChatAberto(true);
+  };
+
+  const handleVoltarParaLista = () => {
+    setChatAberto(false);
   };
 
   const handleEnviarMensagem = (e) => {
@@ -170,7 +180,11 @@ export default function Home() {
       {/* Corpo principal: sidebar + chat */}
       <div className="flex flex-1 min-h-0">
         {/* ---------------- SIDEBAR ---------------- */}
-        <aside className="w-[380px] shrink-0 border-r border-gray-200 bg-white flex flex-col">
+        <aside
+          className={`${
+            chatAberto ? "hidden" : "flex"
+          } md:flex w-full md:w-[380px] shrink-0 border-r border-gray-200 bg-white flex-col`}
+        >
           {/* Pesquisa */}
           <div className="p-4 border-b border-gray-200">
             <div className="relative">
@@ -248,16 +262,28 @@ export default function Home() {
         </aside>
 
         {/* ---------------- ÁREA DO CHAT ---------------- */}
-        <section className="flex-1 flex flex-col min-w-0">
+        <section
+          className={`${
+            chatAberto ? "flex" : "hidden"
+          } md:flex flex-1 flex-col min-w-0`}
+        >
           {/* Header do chat */}
-          <div className="h-16 shrink-0 border-b border-gray-200 bg-white flex items-center justify-between px-6">
-            <div className="flex items-center gap-3">
-              <FaUserCircle className="text-3xl text-gray-300" />
-              <span className="font-semibold text-gray-800">
+          <div className="h-16 shrink-0 border-b border-gray-200 bg-white flex items-center justify-between px-4 md:px-6">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={handleVoltarParaLista}
+                className="md:hidden text-gray-500 hover:text-orange-500 transition-colors text-lg shrink-0"
+                title="Voltar"
+              >
+                <FaArrowLeft />
+              </button>
+              <FaUserCircle className="text-3xl text-gray-300 shrink-0" />
+              <span className="font-semibold text-gray-800 truncate">
                 {contatoSelecionado?.nome || "Selecione uma conversa"}
               </span>
             </div>
-            <img src={logo} alt="Logo" className="h-10" />
+            <img src={logo} alt="Logo" className="h-10 hidden sm:block shrink-0" />
           </div>
 
           {/* Mensagens */}
@@ -273,7 +299,7 @@ export default function Home() {
                 }`}
               >
                 <div
-                  className={`max-w-[60%] rounded-xl px-4 py-2 shadow-sm ${
+                  className={`max-w-[85%] md:max-w-[60%] rounded-xl px-4 py-2 shadow-sm ${
                     msg.autor === "eu"
                       ? "bg-orange-500 text-white rounded-br-none"
                       : "bg-white text-gray-800 rounded-bl-none"
