@@ -14,6 +14,9 @@ export default function Login() {
         const [email, setEmail] = useState(""); 
         const [password, setPassword] = useState("");
 
+        //const responsavel pelo botão apresentar "Carregando.." enquanto requisição é feita
+        const [carregando, setCarregando] = useState(false);
+
 
         //Para erros de senha ou nickname ou email
         const [erroSenha, setErroSenha] = useState("");
@@ -22,15 +25,13 @@ export default function Login() {
 
         const handleSubmit = async (e) => {
           e.preventDefault();
+          setCarregando(true);
 
           setErroSenha("");
           setErroEmail("");
 
             //Validações
         
-
-            
-
              // Enviar para a API
              const dados = {
              email_usuario: email,
@@ -40,7 +41,7 @@ export default function Login() {
                 try {
                     const { data } = await api.post('/API/login', dados);
 
-                    const token = data.token;
+                    //const token = data.token;
 
                     localStorage.setItem('token', token);
 
@@ -53,7 +54,9 @@ export default function Login() {
 
                     alert("Email ou senha incorretos!")
                 }
-
+                finally{
+                    setCarregando(false);
+                }
             console.log(dados);
         };
 
@@ -116,11 +119,12 @@ export default function Login() {
                     {/* Botão */}
                     <button
                         type="submit"
-                       className="w-full rounded-xl bg-orange-500 py-3 text-white font-semibold transition-all duration-300 hover:bg-orange-600 hover:scale-[1.02]"
+                        disabled = {carregando}
+                        className="w-full rounded-xl bg-orange-500 py-3 text-white font-semibold transition-all duration-300 hover:bg-orange-600 hover:scale-[1.02]"
                     >
-                        Entrar
-
+                        {carregando ? "Carregando..." : "Entrar"}
                     </button>
+
 
                     {/* Link */}
                     <p className="text-center text-sm text-gray-500">

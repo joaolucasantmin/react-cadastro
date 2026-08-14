@@ -16,6 +16,9 @@ export default function Cadastro() {
         const [password, setPassword] = useState("");
         const [confirmPassword, setConfirmPassword] = useState("");
 
+        //const responsavel pelo botão apresentar "Carregando.." enquanto requisição é feita
+        const [carregando, setCarregando] = useState(false);
+
         //Para erros de senha ou nickname ou email
         const [erroSenha, setErroSenha] = useState("");
         const [erroEmail, setErroEmail] = useState("");
@@ -24,6 +27,7 @@ export default function Cadastro() {
         const handleSubmit = async (e) => {
           e.preventDefault();
 
+          setCarregando(true);
           setErroSenha("");
           setErroEmail("");
           setErroNome("");
@@ -69,6 +73,9 @@ export default function Cadastro() {
                     } else {
                         alert("Erro ao conectar com o servidor.");
                     }
+                }
+                finally{
+                    setCarregando(false);
                 }
 
             console.log(dados);
@@ -175,10 +182,10 @@ export default function Cadastro() {
                     {/* Botão */}
                     <button
                         type="submit"
+                        disabled={carregando}
                        className="w-full rounded-xl bg-orange-500 py-3 text-white font-semibold transition-all duration-300 hover:bg-orange-600 hover:scale-[1.02]"
                     >
-                        Cadastrar
-
+                        {carregando ? "Carregando..." : "Cadastrar"}
                     </button>
 
                     {/* Link */}
