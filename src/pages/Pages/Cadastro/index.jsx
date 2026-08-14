@@ -27,7 +27,6 @@ export default function Cadastro() {
         const handleSubmit = async (e) => {
           e.preventDefault();
 
-          setCarregando(true);
           setErroSenha("");
           setErroEmail("");
           setErroNome("");
@@ -37,6 +36,8 @@ export default function Cadastro() {
                 setErroSenha("As senhas não coincidem.");
                 return;
             }
+          
+          setCarregando(true);
 
 
              // Enviar para a API
