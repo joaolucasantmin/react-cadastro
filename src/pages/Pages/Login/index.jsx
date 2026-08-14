@@ -14,51 +14,43 @@ export default function Login() {
         const [email, setEmail] = useState(""); 
         const [password, setPassword] = useState("");
 
-        //const responsavel pelo botão apresentar "Carregando.." enquanto requisição é feita
-        const [carregando, setCarregando] = useState(false);
-
-
         //Para erros de senha ou nickname ou email
         const [erroSenha, setErroSenha] = useState("");
         const [erroEmail, setErroEmail] = useState("");
+
         
+        // Estado do botão
+        const [carregando, setCarregando] = useState(false);
 
         const handleSubmit = async (e) => {
-          e.preventDefault();
-          setCarregando(true);
+        e.preventDefault();
 
-          setErroSenha("");
-          setErroEmail("");
+        if (carregando) return; // evita dois cliques
 
-            //Validações
-        
-             // Enviar para a API
-             const dados = {
-             email_usuario: email,
-             senha_usuario: password,
-            };
+        setCarregando(true);
+        setErroSenha("");
+        setErroEmail("");
 
-                try {
-                    const { data } = await api.post('/API/login', dados);
-
-                    //const token = data.token;
-
-                    localStorage.setItem('token', token);
-
-                    //console.log(token)  DEIXE COMENTADO PARA NAO EXPOR TOKEN
-                    //alert("Login ok!")
-
-                    navigate("/home");
-
-                } catch (error) {
-
-                    alert("Email ou senha incorretos!")
-                }
-                finally{
-                    setCarregando(false);
-                }
-            console.log(dados);
+        const dados = {
+            email_usuario: email,
+            senha_usuario: password,
         };
+
+        try {
+            const { data } = await api.post("/API/login", dados);
+
+            // Salva o token sem exibi-lo no console
+            localStorage.setItem("token", data.token);
+
+            navigate("/home");
+        } catch (error) {
+            alert("Email ou senha incorretos!");
+        } finally {
+            setCarregando(false);
+        }
+    };
+
+
 
     return (
         //Fundo
@@ -119,6 +111,7 @@ export default function Login() {
                     {/* Botão */}
                     <button
                         type="submit"
+                        onClick={handleSubmit}
                         disabled = {carregando}
                         className="w-full rounded-xl bg-orange-500 py-3 text-white font-semibold transition-all duration-300 hover:bg-orange-600 hover:scale-[1.02]"
                     >

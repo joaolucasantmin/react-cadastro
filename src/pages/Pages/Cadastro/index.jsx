@@ -16,71 +16,67 @@ export default function Cadastro() {
         const [password, setPassword] = useState("");
         const [confirmPassword, setConfirmPassword] = useState("");
 
-        //const responsavel pelo botão apresentar "Carregando.." enquanto requisição é feita
-        const [carregando, setCarregando] = useState(false);
+        // Estado responsável pelo botão "Carregando..."
+const [carregando, setCarregando] = useState(false);
 
-        //Para erros de senha ou nickname ou email
-        const [erroSenha, setErroSenha] = useState("");
-        const [erroEmail, setErroEmail] = useState("");
-        const [erroNome, setErroNome] = useState("");
+// Estados de erro
+const [erroSenha, setErroSenha] = useState("");
+const [erroEmail, setErroEmail] = useState("");
+const [erroNome, setErroNome] = useState("");
 
-        const handleSubmit = async (e) => {
-          e.preventDefault();
+const handleSubmit = async (e) => {
+    e.preventDefault();
 
-          setErroSenha("");
-          setErroEmail("");
-          setErroNome("");
+    if (carregando) return; // evita clique duplo
 
-            //Validações
-            if(password !== confirmPassword){  //Verifica se as senhas são iguais
-                setErroSenha("As senhas não coincidem.");
-                return;
+    setErroSenha("");
+    setErroEmail("");
+    setErroNome("");
+
+    // Validação antes de iniciar o carregamento
+    if (password !== confirmPassword) {
+        setErroSenha("As senhas não coincidem.");
+        return;
+    }
+
+    setCarregando(true);
+
+    const dados = {
+        email_usuario: email,
+        nome_usuario: name,
+        senha_usuario: password,
+    };
+
+    try {
+        await api.post("/API/cadastro", dados);
+
+        alert("Usuário Cadastrado!");
+        navigate("/login");
+
+    } catch (error) {
+
+        if (error.response) {
+            const mensagem = error.response.data.error;
+
+            if (mensagem === "Este e-mail já está cadastrado.") {
+                setErroEmail(mensagem);
+            } else if (mensagem === "Este nome de usuário já está em uso.") {
+                setErroNome(mensagem);
+            } else {
+                alert(mensagem);
             }
-          
-          setCarregando(true);
+        } else {
+            alert("Erro ao conectar com o servidor.");
+        }
+
+    } finally {
+        setCarregando(false);
+    }
+
+    // console.log(dados); DESCOMENTE APENAS CASO PRECISE VERIFICAR O CONSOLE NO SITE
+};
 
 
-             // Enviar para a API
-             const dados = {
-             email_usuario: email,
-             nome_usuario: name,
-             senha_usuario: password,
-            };
-
-                try {
-                    await api.post('/API/cadastro', dados);
-
-                    alert("Usuário Cadastrado!")
-
-                    navigate("/login");
-
-                } catch (error) {
-                    console.error(error);
-
-                    if (error.response) {
-
-                        const mensagem = error.response.data.error;
-
-                        if (mensagem === "Este e-mail já está cadastrado.") {
-                            setErroEmail(mensagem);
-                        }
-                        else if (mensagem === "Este nome de usuário já está em uso.") {
-                            setErroNome(mensagem);
-                        }
-                        else {
-                            alert(mensagem);
-                        }
-
-                    } else {
-                        alert("Erro ao conectar com o servidor.");
-                    }
-                }
-                finally{
-                    setCarregando(false);
-                }
-
-            console.log(dados);
-        };
 
     return (
         //Fundo
