@@ -190,26 +190,36 @@ const [mensagens, setMensagens] = useState([]);
     setChatAberto(false);
   };
 
-  const handleEnviarMensagem = (e) => {
+  const handleEnviarMensagem = async (e) => {
     e.preventDefault();
-    if (!texto.trim()) return;
+    if (!texto.trim() || !contatoSelecionado) return;
 
-    const novaMensagem = {
-      id: Date.now(),
-      autor: "eu",
-      texto: texto.trim(),
-      hora: new Date().toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
+    try{
+      const token = localStorage.getItem("token");
 
-    setMensagens((prev) => [...prev, novaMensagem]);
-    setTexto("");
+      await api.post("/API/mensagens",
+        {
+          destinatario: contatoSelecionado.id,
+          mensagem: texto.trim(),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    // Quando a API estiver pronta:
-    // await api.post('/API/mensagens', { destinatario_id: contatoSelecionado.id, texto });
+      setTexto("");
+
+      //Recarrega as mensagens da conversa
+      await carregarMensagens(contatoSelecionado.id);
+
+    }catch(erro){
+      console.log("Erro ao enviar mensagem: ", erro);
+    }
   };
+
+  
 
   const handleSair = () => {
     localStorage.removeItem("token");
