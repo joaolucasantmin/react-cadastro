@@ -100,7 +100,7 @@ const [mensagens, setMensagens] = useState([]);
       }
 
       try {
-        const response = await api.get("API/perfil", {
+        const response = await api.get("/API/perfil", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -118,11 +118,14 @@ const [mensagens, setMensagens] = useState([]);
     };
 
     buscarUsuario();
+    
+  }, [navigate]);
+
     const carregarContatos = async () =>{
       try{
         const token = localStorage.getItem("token");
 
-        const response = await api.get("API/usuarios", {
+        const response = await api.get("/API/usuarios", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -143,7 +146,6 @@ const [mensagens, setMensagens] = useState([]);
         console.log("Erro ao carregar contatos: ",erro);
       }
     };
-  }, [navigate]);
 
     useEffect(() => {
       if (usuario) {
@@ -256,16 +258,16 @@ const [mensagens, setMensagens] = useState([]);
                         {contato.nome_usuario}
                       </span>
                       <span className="text-xs text-gray-400 shrink-0 ml-2">
-                        {contato.hora}
+                        Horas
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500 truncate">
-                        {contato.ultimaMensagem}
+                        ultimaMensagem
                       </span>
                       {contato.naoLidas > 0 && (
                         <span className="ml-2 shrink-0 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                          {contato.naoLidas}
+                          naoLidas
                         </span>
                       )}
                     </div>
