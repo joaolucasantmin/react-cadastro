@@ -147,6 +147,25 @@ const [mensagens, setMensagens] = useState([]);
       }
     };
 
+    const carregarMensagens = async (idContato) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await api.get(`/API/mensagens/${idContato}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    setMensagens(response.data);
+
+  } catch (erro) {
+    console.log("Erro ao carregar mensagens:", erro);
+  }
+};
+
+
+
     useEffect(() => {
       if (usuario) {
         carregarContatos();
@@ -160,10 +179,11 @@ const [mensagens, setMensagens] = useState([]);
     }
   }, [mensagens]);
 
-  const handleSelecionarContato = (contato) => {
-    setContatoSelecionado(contato);
-    setMensagens(MENSAGENS_MOCK[contato.id] || []);
-    setChatAberto(true);
+  const handleSelecionarContato = async (contato) => {
+  setContatoSelecionado(contato);
+  setChatAberto(true);
+
+  await carregarMensagens(contato.id);
   };
 
   const handleVoltarParaLista = () => {
@@ -208,6 +228,9 @@ const [mensagens, setMensagens] = useState([]);
       </div>
     );
   }
+
+
+
 
   return (
     <main className="h-screen w-screen flex flex-col bg-gray-100">
@@ -327,25 +350,32 @@ const [mensagens, setMensagens] = useState([]);
           >
             {mensagens.map((msg) => (
               <div
-                key={msg.id}
+                key={msg.cod_mensagem}
                 className={`flex ${
-                  msg.autor === "eu" ? "justify-end" : "justify-start"
+                  msg.cod_remetente === usuario.id 
+                  ? "justify-end" 
+                  : "justify-start"
                 }`}
               >
                 <div
                   className={`max-w-[85%] md:max-w-[60%] rounded-xl px-4 py-2 shadow-sm ${
-                    msg.autor === "eu"
+                    msg.cod_remetente === usuario.id
                       ? "bg-orange-500 text-white rounded-br-none"
                       : "bg-white text-gray-800 rounded-bl-none"
                   }`}
                 >
-                  <p className="text-sm">{msg.texto}</p>
+                  <p className="text-sm">{msg.mensagem}</p>
                   <span
                     className={`block text-[10px] mt-1 text-right ${
-                      msg.autor === "eu" ? "text-orange-100" : "text-gray-400"
+                      msg.cod_remetente === usuario.id
+                      ? "text-orange-100" 
+                      : "text-gray-400"
                     }`}
                   >
-                    {msg.hora}
+                    {new Date(msg.data_envio).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
               </div>
