@@ -75,9 +75,9 @@ export default function Home() {
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
 
-  const [contatos] = useState(CONTATOS_MOCK);
-  const [contatoSelecionado, setContatoSelecionado] = useState(CONTATOS_MOCK[0]);
-  const [mensagens, setMensagens] = useState(MENSAGENS_MOCK[CONTATOS_MOCK[0].id]);
+  const [contatos, setContatos] = useState([]);
+const [contatoSelecionado, setContatoSelecionado] = useState(null);
+const [mensagens, setMensagens] = useState([]);
   const [texto, setTexto] = useState("");
   const [busca, setBusca] = useState("");
 
@@ -118,7 +118,39 @@ export default function Home() {
     };
 
     buscarUsuario();
+    const carregarContatos = async () =>{
+      try{
+        const token = localStorage.getItem("token");
+
+        const response = await api.get("API/usuarios", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        //Remove o proprio usuario da lista
+        const lista = response.data.usuarios.filter(
+          (u) => u.id !== usuario?.id
+        );
+
+        setContatos(lista);
+
+        if(lista.length > 0 && !contatoSelecionado) {
+          setContatoSelecionado(lista[0]);
+        }
+
+      }catch(erro){
+        console.log("Erro ao carregar contatos: ",erro);
+      }
+    };
   }, [navigate]);
+
+    useEffect(() => {
+      if (usuario) {
+        carregarContatos();
+      }
+    }, [usuario]);
+
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -163,7 +195,7 @@ export default function Home() {
   };
 
   const contatosFiltrados = contatos.filter((c) =>
-    c.nome.toLowerCase().includes(busca.toLowerCase())
+    c.nome_usuario.toLowerCase().includes(busca.toLowerCase())
   );
 
   // Enquanto verifica o token / busca o perfil, evita piscar a tela
@@ -221,7 +253,7 @@ export default function Home() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
                       <span className="font-semibold text-gray-800 truncate">
-                        {contato.nome}
+                        {contato.nome_usuario}
                       </span>
                       <span className="text-xs text-gray-400 shrink-0 ml-2">
                         {contato.hora}
@@ -280,7 +312,7 @@ export default function Home() {
               </button>
               <FaUserCircle className="text-3xl text-gray-300 shrink-0" />
               <span className="font-semibold text-gray-800 truncate">
-                {contatoSelecionado?.nome || "Selecione uma conversa"}
+                {contatoSelecionado?.nome_usuario || "Selecione uma conversa"}
               </span>
             </div>
             <img src={logo} alt="Logo" className="h-10 hidden sm:block shrink-0" />
