@@ -14,8 +14,8 @@ import {
 import logo from "/src/assets/logo.png";
 
 //TEMPORARIO PARA TESTE
-console.log("URL:", import.meta.env.VITE_SUPABASE_URL);
-console.log("KEY:", !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+//console.log("URL:", import.meta.env.VITE_SUPABASE_URL);
+//console.log("KEY:", !!import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 
 export default function Home() {
@@ -196,9 +196,6 @@ const [mensagens, setMensagens] = useState([]);
       );
 
       setTexto("");
-
-      //Recarrega as mensagens da conversa
-      await carregarMensagens(contatoSelecionado.id);
 
     }catch(erro){
       console.log("Erro ao enviar mensagem: ", erro);
