@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import api from '/src/services/api'
 import { useNavigate } from "react-router-dom";
+import supabase from "/src/services/supabase";
 
 import {
   FaSearch,
@@ -120,6 +121,43 @@ const [mensagens, setMensagens] = useState([]);
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [mensagens]);
+
+  
+    //REALTIME
+    useEffect(() => {
+  if (!contatoSelecionado || !usuario) return;
+
+  const canal = supabase
+    .channel("chat-tempo-real")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "mensagens",
+      },
+      (payload) => {
+        const msg = payload.new;
+
+        const ehDaConversa =
+          (msg.cod_remetente === usuario.id &&
+            msg.cod_destinatario === contatoSelecionado.id) ||
+          (msg.cod_remetente === contatoSelecionado.id &&
+            msg.cod_destinatario === usuario.id);
+
+        if (ehDaConversa) {
+          setMensagens((prev) => [...prev, msg]);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(canal);
+  };
+}, [contatoSelecionado, usuario]);
+
+
 
   const handleSelecionarContato = async (contato) => {
   setContatoSelecionado(contato);
