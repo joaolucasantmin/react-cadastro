@@ -13,6 +13,10 @@ import {
 } from "react-icons/fa";
 import logo from "/src/assets/logo.png";
 
+//TEMPORARIO PARA TESTE
+console.log("URL:", import.meta.env.VITE_SUPABASE_URL);
+console.log("KEY:", !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+
 
 export default function Home() {
   const navigate = useNavigate();
@@ -150,7 +154,9 @@ const [mensagens, setMensagens] = useState([]);
         }
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log("Realtime status: ", status);
+    }); 
 
   return () => {
     supabase.removeChannel(canal);
