@@ -12,62 +12,6 @@ import {
 } from "react-icons/fa";
 import logo from "/src/assets/logo.png";
 
-// ---------------------------------------------------------------------------
-// MOCK DE DADOS — remover quando a API de conversas/mensagens estiver pronta
-// ---------------------------------------------------------------------------
-const CONTATOS_MOCK = [
-  {
-    id: 1,
-    nome: "Fulano",
-    ultimaMensagem: "Beleza, te aviso quando chegar!",
-    hora: "09:41",
-    naoLidas: 2,
-  },
-  {
-    id: 2,
-    nome: "Adilson Mineiro",
-    ultimaMensagem: "Segue o orçamento em anexo.",
-    hora: "08:15",
-    naoLidas: 0,
-  },
-  {
-    id: 3,
-    nome: "Suporte Técnico",
-    ultimaMensagem: "Instalação confirmada para sexta.",
-    hora: "Ontem",
-    naoLidas: 0,
-  },
-  {
-    id: 4,
-    nome: "Cliente - Maria",
-    ultimaMensagem: "Obrigada pelo atendimento!",
-    hora: "Ontem",
-    naoLidas: 0,
-  },
-];
-
-const MENSAGENS_MOCK = {
-  1: [
-    { id: 1, autor: "eles", texto: "Oi! Tudo bem?", hora: "09:30" },
-    { id: 2, autor: "eu", texto: "Tudo sim, e com você?", hora: "09:32" },
-    { id: 3, autor: "eles", texto: "Tudo certo por aqui.", hora: "09:33" },
-    {
-      id: 4,
-      autor: "eles",
-      texto: "Beleza, te aviso quando chegar!",
-      hora: "09:41",
-    },
-  ],
-  2: [
-    { id: 1, autor: "eles", texto: "Segue o orçamento em anexo.", hora: "08:15" },
-  ],
-  3: [
-    { id: 1, autor: "eles", texto: "Instalação confirmada para sexta.", hora: "Ontem" },
-  ],
-  4: [
-    { id: 1, autor: "eles", texto: "Obrigada pelo atendimento!", hora: "Ontem" },
-  ],
-};
 
 export default function Home() {
   const navigate = useNavigate();
@@ -87,9 +31,7 @@ const [mensagens, setMensagens] = useState([]);
 
   const scrollRef = useRef(null);
 
-  // -------------------------------------------------------------------------
-  // Verificação de login + busca do perfil (mesma lógica do TelaMain antigo)
-  // -------------------------------------------------------------------------
+  // Verificação de login + busca do perfil
   useEffect(() => {
     const buscarUsuario = async () => {
       const token = localStorage.getItem("token");
