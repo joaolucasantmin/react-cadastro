@@ -145,6 +145,7 @@ export default function Home() {
                 hora: new Date(ultima.data_envio).toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
                   minute: "2-digit",
+                  timeZone: "America/Sao_Paulo",
                 }),
                 ultimaData: ultima.data_envio,
               };
@@ -246,6 +247,7 @@ export default function Home() {
             new Date(msg.data_envio).toLocaleTimeString("pt-BR", {
               hour: "2-digit",
               minute: "2-digit",
+              timeZone: "America/Sao_Paulo",
             })
           );
         }
@@ -324,6 +326,7 @@ const handleSelecionarContato = async (contato) => {
         new Date().toLocaleTimeString("pt-BR", {
           hour: "2-digit",
           minute: "2-digit",
+          timeZone: "America/Sao_Paulo",
         })
       );
 
