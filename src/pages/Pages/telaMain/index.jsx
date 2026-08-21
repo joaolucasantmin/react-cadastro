@@ -10,6 +10,10 @@ import {
   FaSignOutAlt,
   FaUserCircle,
   FaArrowLeft,
+  FaEllipsisV,
+  FaUserPlus,
+  FaTimes,
+  FaCamera,
 } from "react-icons/fa";
 import logo from "/src/assets/logo.png";
 
@@ -25,14 +29,33 @@ export default function Home() {
   const [carregando, setCarregando] = useState(true);
 
   const [contatos, setContatos] = useState([]);
-const [contatoSelecionado, setContatoSelecionado] = useState(null);
-const [mensagens, setMensagens] = useState([]);
+  const [contatoSelecionado, setContatoSelecionado] = useState(null);
+  const [mensagens, setMensagens] = useState([]);
   const [texto, setTexto] = useState("");
   const [busca, setBusca] = useState("");
 
   // No mobile só um painel aparece por vez: lista de conversas OU chat aberto.
   // A partir do breakpoint md, os dois painéis ficam sempre visíveis lado a lado.
   const [chatAberto, setChatAberto] = useState(false);
+
+  // ---------------------------------------------------------------------
+  // Menu de opções do contato (3 pontinhos), modal de configurações,
+  // bloqueados e adicionar amigo
+  // ---------------------------------------------------------------------
+  const [menuOpcoesAberto, setMenuOpcoesAberto] = useState(false);
+  const [modalConfigAberto, setModalConfigAberto] = useState(false);
+  const [abaConfig, setAbaConfig] = useState("perfil");
+  const [usuariosBloqueados, setUsuariosBloqueados] = useState([]);
+
+  const [mostrarAdicionarAmigo, setMostrarAdicionarAmigo] = useState(false);
+  const [nomeAmigoBusca, setNomeAmigoBusca] = useState("");
+
+  // Campos do formulário de perfil (aba "Perfil" do modal de configurações)
+  const [novoNomeUsuario, setNovoNomeUsuario] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [fotoPreview, setFotoPreview] = useState(null);
+  const [arquivoFoto, setArquivoFoto] = useState(null);
 
   const scrollRef = useRef(null);
 
@@ -65,8 +88,18 @@ const [mensagens, setMensagens] = useState([]);
     };
 
     buscarUsuario();
-    
+
   }, [navigate]);
+
+  // Preenche o formulário de perfil quando o usuário é carregado
+  useEffect(() => {
+    if (usuario) {
+      setNovoNomeUsuario(usuario.nome_usuario || "");
+      if (usuario.foto_perfil) {
+        setFotoPreview(usuario.foto_perfil);
+      }
+    }
+  }, [usuario]);
 
     const carregarContatos = async () =>{
       try{
@@ -126,7 +159,7 @@ const [mensagens, setMensagens] = useState([]);
     }
   }, [mensagens]);
 
-  
+
     //REALTIME
     useEffect(() => {
   if (!contatoSelecionado || !usuario) return;
@@ -156,7 +189,7 @@ const [mensagens, setMensagens] = useState([]);
     )
     .subscribe((status) => {
       console.log("Realtime status: ", status);
-    }); 
+    });
 
   return () => {
     supabase.removeChannel(canal);
@@ -168,12 +201,14 @@ const [mensagens, setMensagens] = useState([]);
   const handleSelecionarContato = async (contato) => {
   setContatoSelecionado(contato);
   setChatAberto(true);
+  setMenuOpcoesAberto(false);
 
   await carregarMensagens(contato.id);
   };
 
   const handleVoltarParaLista = () => {
     setChatAberto(false);
+    setMenuOpcoesAberto(false);
   };
 
   const handleEnviarMensagem = async (e) => {
@@ -202,11 +237,169 @@ const [mensagens, setMensagens] = useState([]);
     }
   };
 
-  
+
 
   const handleSair = () => {
     localStorage.removeItem("token");
     navigate("/login");
+  };
+
+  // ---------------------------------------------------------------------
+  // Opções do menu de 3 pontinhos: remover amizade, bloquear e (admin) excluir
+  // ---------------------------------------------------------------------
+  const handleRemoverAmizade = async (contato) => {
+    if (!contato) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      // Remove apenas da lista de contatos. O usuário continua podendo
+      // ser encontrado na pesquisa e uma nova amizade pode ser criada depois.
+      // await api.delete(`/API/amizades/${contato.id}`, {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
+
+      setContatos((prev) => prev.filter((c) => c.id !== contato.id));
+
+      if (contatoSelecionado?.id === contato.id) {
+        setContatoSelecionado(null);
+        setChatAberto(false);
+      }
+    } catch (erro) {
+      console.log("Erro ao remover amizade:", erro);
+    } finally {
+      setMenuOpcoesAberto(false);
+    }
+  };
+
+  const handleBloquearUsuario = async (contato) => {
+    if (!contato) return;
+
+    const confirmar = window.confirm(
+      `Bloquear ${contato.nome_usuario}? Vocês não poderão mais trocar mensagens.`
+    );
+    if (!confirmar) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      // Bloqueio impede novas mensagens e some da lista de contatos.
+      // await api.post(`/API/usuarios/${contato.id}/bloquear`, {}, {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
+
+      setContatos((prev) => prev.filter((c) => c.id !== contato.id));
+      setUsuariosBloqueados((prev) =>
+        prev.some((u) => u.id === contato.id) ? prev : [...prev, contato]
+      );
+
+      if (contatoSelecionado?.id === contato.id) {
+        setContatoSelecionado(null);
+        setChatAberto(false);
+      }
+    } catch (erro) {
+      console.log("Erro ao bloquear usuário:", erro);
+    } finally {
+      setMenuOpcoesAberto(false);
+    }
+  };
+
+  const handleExcluirUsuario = async (contato) => {
+    if (!contato) return;
+
+    const confirmar = window.confirm(
+      `Excluir o usuário ${contato.nome_usuario}? As mensagens serão mantidas, mas o nome dele passará a ser "Usuário excluído".`
+    );
+    if (!confirmar) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      // Ação exclusiva de admin: o backend deve manter as mensagens e trocar
+      // o nome do usuário para "Usuário excluído" em vez de apagar tudo.
+      // await api.delete(`/API/usuarios/${contato.id}`, {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
+
+      setContatos((prev) => prev.filter((c) => c.id !== contato.id));
+
+      if (contatoSelecionado?.id === contato.id) {
+        setContatoSelecionado(null);
+        setChatAberto(false);
+      }
+    } catch (erro) {
+      console.log("Erro ao excluir usuário:", erro);
+    } finally {
+      setMenuOpcoesAberto(false);
+    }
+  };
+
+  const handleDesbloquearUsuario = async (contato) => {
+    try {
+      const token = localStorage.getItem("token");
+      // await api.delete(`/API/usuarios/${contato.id}/bloquear`, {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
+
+      setUsuariosBloqueados((prev) => prev.filter((u) => u.id !== contato.id));
+    } catch (erro) {
+      console.log("Erro ao desbloquear usuário:", erro);
+    }
+  };
+
+  // ---------------------------------------------------------------------
+  // Adicionar amigo (ainda não funcional — só a interface por enquanto)
+  // ---------------------------------------------------------------------
+  const handleEnviarPedidoAmizade = () => {
+    if (!nomeAmigoBusca.trim()) return;
+
+    // await api.post('/API/amizades', { nome_usuario: nomeAmigoBusca }, {
+    //   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    // });
+
+    alert("Pedido de amizade enviado! (funcionalidade ainda em desenvolvimento)");
+    setNomeAmigoBusca("");
+    setMostrarAdicionarAmigo(false);
+  };
+
+  // ---------------------------------------------------------------------
+  // Configurações de perfil (nome, senha, foto)
+  // ---------------------------------------------------------------------
+  const handleSelecionarFoto = (e) => {
+    const arquivo = e.target.files?.[0];
+    if (!arquivo) return;
+
+    setArquivoFoto(arquivo);
+    setFotoPreview(URL.createObjectURL(arquivo));
+  };
+
+  const handleSalvarPerfil = async (e) => {
+    e.preventDefault();
+
+    if (novaSenha && novaSenha !== confirmarSenha) {
+      alert("As senhas não coincidem.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const formData = new FormData();
+      formData.append("nome_usuario", novoNomeUsuario);
+      if (novaSenha) formData.append("senha", novaSenha);
+      if (arquivoFoto) formData.append("foto_perfil", arquivoFoto);
+
+      // await api.put("/API/perfil", formData, {
+      //   headers: {
+      //     Authorization: `Bearer ${token}`,
+      //     "Content-Type": "multipart/form-data",
+      //   },
+      // });
+
+      setUsuario((prev) => (prev ? { ...prev, nome_usuario: novoNomeUsuario } : prev));
+      setNovaSenha("");
+      setConfirmarSenha("");
+      alert("Perfil atualizado!");
+    } catch (erro) {
+      console.log("Erro ao atualizar perfil:", erro);
+    }
   };
 
   const contatosFiltrados = contatos.filter((c) =>
@@ -235,18 +428,52 @@ const [mensagens, setMensagens] = useState([]);
             chatAberto ? "hidden" : "flex"
           } md:flex w-full md:w-[380px] shrink-0 border-r border-gray-200 bg-white flex-col`}
         >
-          {/* Pesquisa */}
+          {/* Pesquisa + adicionar amigo */}
           <div className="p-4 border-b border-gray-200">
-            <div className="relative">
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Pesquisar conversa..."
-                className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Pesquisar conversa..."
+                  className="w-full rounded-xl border border-gray-200 py-2.5 pl-11 pr-4 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMostrarAdicionarAmigo((v) => !v)}
+                title="Adicionar amigo"
+                className={`shrink-0 h-11 w-11 rounded-xl border flex items-center justify-center transition-colors ${
+                  mostrarAdicionarAmigo
+                    ? "border-orange-500 text-orange-500 bg-orange-50"
+                    : "border-gray-200 text-gray-400 hover:text-orange-500 hover:border-orange-500"
+                }`}
+              >
+                <FaUserPlus />
+              </button>
             </div>
+
+            {mostrarAdicionarAmigo && (
+              <div className="mt-3 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={nomeAmigoBusca}
+                  onChange={(e) => setNomeAmigoBusca(e.target.value)}
+                  placeholder="Digite o nome do usuário..."
+                  className="flex-1 rounded-xl border border-gray-200 py-2 px-4 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                />
+                <button
+                  type="button"
+                  onClick={handleEnviarPedidoAmizade}
+                  className="shrink-0 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-3 py-2 transition-colors"
+                >
+                  Enviar
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Lista de contatos */}
@@ -293,14 +520,30 @@ const [mensagens, setMensagens] = useState([]);
             })}
           </div>
 
-          {/* Rodapé sidebar: Sair */}
+          {/* Rodapé sidebar: perfil (abre configurações) + Sair */}
           <div className="p-4 border-t border-gray-200 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <FaUserCircle className="text-2xl text-gray-300" />
+            <button
+              type="button"
+              onClick={() => {
+                setAbaConfig("perfil");
+                setModalConfigAberto(true);
+              }}
+              className="flex items-center gap-2 text-left"
+              title="Abrir configurações"
+            >
+              {usuario?.foto_perfil || fotoPreview ? (
+                <img
+                  src={fotoPreview || usuario?.foto_perfil}
+                  alt="Foto de perfil"
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <FaUserCircle className="text-2xl text-gray-300" />
+              )}
               <span className="text-sm font-medium text-gray-600">
                 {usuario?.nome_usuario || "Minha conta"}
               </span>
-            </div>
+            </button>
             <button
               onClick={handleSair}
               className="flex items-center gap-1 text-sm text-gray-500 hover:text-orange-500 transition-colors"
@@ -333,7 +576,58 @@ const [mensagens, setMensagens] = useState([]);
                 {contatoSelecionado?.nome_usuario || "Selecione uma conversa"}
               </span>
             </div>
-            <img src={logo} alt="Logo" className="h-10 hidden sm:block shrink-0" />
+
+            <div className="flex items-center gap-4 shrink-0">
+              {contatoSelecionado && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpcoesAberto((v) => !v)}
+                    className="text-gray-400 hover:text-orange-500 transition-colors text-lg p-1"
+                    title="Opções"
+                  >
+                    <FaEllipsisV />
+                  </button>
+
+                  {menuOpcoesAberto && (
+                    <>
+                      {/* Fundo invisível para fechar o menu ao clicar fora */}
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setMenuOpcoesAberto(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-20">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoverAmizade(contatoSelecionado)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          Remover amizade
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleBloquearUsuario(contatoSelecionado)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          Bloquear usuário
+                        </button>
+                        {usuario?.cargo === "admin" && (
+                          <button
+                            type="button"
+                            onClick={() => handleExcluirUsuario(contatoSelecionado)}
+                            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50"
+                          >
+                            Excluir usuário
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              <img src={logo} alt="Logo" className="h-10 hidden sm:block" />
+            </div>
           </div>
 
           {/* Mensagens */}
@@ -345,8 +639,8 @@ const [mensagens, setMensagens] = useState([]);
               <div
                 key={msg.cod_mensagem}
                 className={`flex ${
-                  msg.cod_remetente === usuario.id 
-                  ? "justify-end" 
+                  msg.cod_remetente === usuario.id
+                  ? "justify-end"
                   : "justify-start"
                 }`}
               >
@@ -361,7 +655,7 @@ const [mensagens, setMensagens] = useState([]);
                   <span
                     className={`block text-[10px] mt-1 text-right ${
                       msg.cod_remetente === usuario.id
-                      ? "text-orange-100" 
+                      ? "text-orange-100"
                       : "text-gray-400"
                     }`}
                   >
@@ -412,6 +706,175 @@ const [mensagens, setMensagens] = useState([]);
           </form>
         </section>
       </div>
+
+      {/* ---------------- MODAL DE CONFIGURAÇÕES ---------------- */}
+      {modalConfigAberto && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+          onClick={() => setModalConfigAberto(false)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Cabeçalho do modal */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="font-semibold text-gray-800 text-lg">Configurações</h2>
+              <button
+                type="button"
+                onClick={() => setModalConfigAberto(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Abas */}
+            <div className="flex border-b border-gray-200">
+              {[
+                { id: "perfil", label: "Perfil" },
+                { id: "bloqueados", label: "Bloqueados" },
+                { id: "amizades", label: "Amizades" },
+              ].map((aba) => (
+                <button
+                  key={aba.id}
+                  type="button"
+                  onClick={() => setAbaConfig(aba.id)}
+                  className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                    abaConfig === aba.id
+                      ? "text-orange-500 border-b-2 border-orange-500"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {aba.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-6">
+              {/* -------- Aba Perfil -------- */}
+              {abaConfig === "perfil" && (
+                <form onSubmit={handleSalvarPerfil} className="space-y-5">
+                  <div className="flex flex-col items-center gap-2">
+                    <label className="cursor-pointer relative">
+                      {fotoPreview ? (
+                        <img
+                          src={fotoPreview}
+                          alt="Foto de perfil"
+                          className="h-24 w-24 rounded-full object-cover"
+                        />
+                      ) : (
+                        <FaUserCircle className="h-24 w-24 text-gray-300" />
+                      )}
+                      <span className="absolute bottom-0 right-0 bg-orange-500 text-white text-xs rounded-full h-7 w-7 flex items-center justify-center">
+                        <FaCamera />
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleSelecionarFoto}
+                      />
+                    </label>
+                    <span className="text-xs text-gray-400">
+                      Clique na foto para trocar
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-600 mb-1 block">
+                      Nome de usuário
+                    </label>
+                    <input
+                      type="text"
+                      value={novoNomeUsuario}
+                      onChange={(e) => setNovoNomeUsuario(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 py-2.5 px-4 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-gray-600 mb-1 block">
+                      Nova senha
+                    </label>
+                    <input
+                      type="password"
+                      value={novaSenha}
+                      onChange={(e) => setNovaSenha(e.target.value)}
+                      placeholder="Deixe em branco para não alterar"
+                      className="w-full rounded-xl border border-gray-200 py-2.5 px-4 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                    />
+                  </div>
+
+                  {novaSenha && (
+                    <div>
+                      <label className="text-sm text-gray-600 mb-1 block">
+                        Confirmar nova senha
+                      </label>
+                      <input
+                        type="password"
+                        value={confirmarSenha}
+                        onChange={(e) => setConfirmarSenha(e.target.value)}
+                        className="w-full rounded-xl border border-gray-200 py-2.5 px-4 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                      />
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full rounded-xl bg-orange-500 py-2.5 text-white font-semibold hover:bg-orange-600 transition-colors"
+                  >
+                    Salvar alterações
+                  </button>
+                </form>
+              )}
+
+              {/* -------- Aba Bloqueados -------- */}
+              {abaConfig === "bloqueados" && (
+                <div className="space-y-2">
+                  {usuariosBloqueados.length === 0 && (
+                    <p className="text-sm text-gray-400 text-center py-6">
+                      Nenhum usuário bloqueado.
+                    </p>
+                  )}
+                  {usuariosBloqueados.map((u) => (
+                    <div
+                      key={u.id}
+                      className="flex items-center justify-between border border-gray-100 rounded-xl px-4 py-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FaUserCircle className="text-3xl text-gray-300" />
+                        <span className="font-medium text-gray-700">
+                          {u.nome_usuario}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDesbloquearUsuario(u)}
+                        className="text-sm text-orange-500 hover:underline"
+                      >
+                        Desbloquear
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* -------- Aba Amizades (solicitações pendentes) -------- */}
+              {abaConfig === "amizades" && (
+                <div>
+                  <p className="text-sm text-gray-400 text-center py-6">
+                    Nenhuma solicitação de amizade pendente.
+                  </p>
+                  {/* Quando a API de amizades estiver pronta: listar aqui as
+                      solicitações recebidas, cada uma com botões de
+                      "Aceitar" e "Recusar". */}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
