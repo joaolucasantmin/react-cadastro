@@ -184,6 +184,20 @@ export default function Home() {
 
         if (ehDaConversa) {
           setMensagens((prev) => [...prev, msg]);
+
+          const outroId =
+            msg.cod_remetente === usuario.id
+              ? msg.cod_destinatario
+              : msg.cod_remetente;
+
+          atualizarContatoNoTopo(
+            outroId,
+            msg.mensagem,
+            new Date(msg.data_envio).toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          );
         }
       }
     )
@@ -198,7 +212,29 @@ export default function Home() {
 
 
 
-  const handleSelecionarContato = async (contato) => {
+  
+  // Atualiza a última mensagem e move a conversa para o topo
+  const atualizarContatoNoTopo = (idContato, ultimaMensagem, hora) => {
+  setContatos((prev) => {
+    const lista = [...prev];
+    const index = lista.findIndex((c) => c.id === idContato);
+
+    if (index === -1) return prev;
+
+    const contato = {
+      ...lista[index],
+      ultimaMensagem,
+      hora,
+    };
+
+    lista.splice(index, 1);
+    lista.unshift(contato);
+
+    return lista;
+  });
+};
+
+const handleSelecionarContato = async (contato) => {
   setContatoSelecionado(contato);
   setChatAberto(true);
   setMenuOpcoesAberto(false);
@@ -231,6 +267,15 @@ export default function Home() {
       );
 
       setTexto("");
+
+      atualizarContatoNoTopo(
+        contatoSelecionado.id,
+        texto.trim(),
+        new Date().toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      );
 
     }catch(erro){
       console.log("Erro ao enviar mensagem: ", erro);
@@ -362,7 +407,17 @@ export default function Home() {
   // ---------------------------------------------------------------------
   // Configurações de perfil (nome, senha, foto)
   // ---------------------------------------------------------------------
-  const handleSelecionarFoto = (e) => {
+  
+  // Libera a URL temporária da foto para evitar vazamento de memória
+  useEffect(() => {
+    return () => {
+      if (fotoPreview && fotoPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(fotoPreview);
+      }
+    };
+  }, [fotoPreview]);
+
+const handleSelecionarFoto = (e) => {
     const arquivo = e.target.files?.[0];
     if (!arquivo) return;
 
@@ -393,7 +448,7 @@ export default function Home() {
       //   },
       // });
 
-      setUsuario((prev) => (prev ? { ...prev, nome_usuario: novoNomeUsuario } : prev));
+      setUsuario((prev) => (prev ? { ...prev, nome_usuario: novoNomeUsuario, foto_perfil: fotoPreview || prev.foto_perfil } : prev));
       setNovaSenha("");
       setConfirmarSenha("");
       alert("Perfil atualizado!");
@@ -501,14 +556,14 @@ export default function Home() {
                         {contato.nome_usuario}
                       </span>
                       <span className="text-xs text-gray-400 shrink-0 ml-2">
-                        Horas
+                        —
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500 truncate">
-                        ultimaMensagem
+                        Iniciar conversa
                       </span>
-                      {contato.naoLidas > 0 && (
+                      {contato.naoLidas && contato.naoLidas > 0 && (
                         <span className="ml-2 shrink-0 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                           naoLidas
                         </span>
@@ -706,6 +761,8 @@ export default function Home() {
           </form>
         </section>
       </div>
+
+
 
       {/* ---------------- MODAL DE CONFIGURAÇÕES ---------------- */}
       {modalConfigAberto && (
