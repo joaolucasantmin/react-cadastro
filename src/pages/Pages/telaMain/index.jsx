@@ -175,7 +175,7 @@ export default function Home() {
         console.log("Erro ao carregar contatos:", erro);
       }
     };
-    
+
 
     const carregarMensagens = async (idContato) => {
   try {
@@ -609,16 +609,16 @@ const handleSelecionarFoto = (e) => {
                         {contato.nome_usuario}
                       </span>
                       <span className="text-xs text-gray-400 shrink-0 ml-2">
-                        —
+                        {contato.hora || "—"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-500 truncate">
-                        Iniciar conversa
+                        {contato.ultimaMensagem || "Iniciar conversa"}
                       </span>
                       {contato.naoLidas && contato.naoLidas > 0 && (
                         <span className="ml-2 shrink-0 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                          naoLidas
+                          {contato.naoLidas}
                         </span>
                       )}
                     </div>
