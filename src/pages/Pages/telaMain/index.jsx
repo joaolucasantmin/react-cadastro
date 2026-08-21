@@ -770,6 +770,7 @@ const handleSelecionarFoto = (e) => {
                     {new Date(msg.data_envio).toLocaleTimeString("pt-BR", {
                       hour: "2-digit",
                       minute: "2-digit",
+                      timeZone: "America/Sao_Paulo",
                     })}
                   </span>
                 </div>
