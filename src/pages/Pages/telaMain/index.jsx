@@ -101,8 +101,8 @@ export default function Home() {
     }
   }, [usuario]);
 
-    const carregarContatos = async () =>{
-      try{
+    const carregarContatos = async () => {
+      try {
         const token = localStorage.getItem("token");
 
         const response = await api.get("/API/usuarios", {
@@ -111,21 +111,71 @@ export default function Home() {
           },
         });
 
-        //Remove o proprio usuario da lista
-        const lista = response.data.usuarios.filter(
+        // Remove o próprio usuário
+        const usuarios = response.data.usuarios.filter(
           (u) => u.id !== usuario?.id
         );
 
+        // Busca a última mensagem de cada conversa
+        const lista = await Promise.all(
+          usuarios.map(async (contato) => {
+            try {
+              const conversa = await api.get(`/API/mensagens/${contato.id}`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              const mensagens = conversa.data;
+
+              if (mensagens.length === 0) {
+                return {
+                  ...contato,
+                  ultimaMensagem: "",
+                  hora: "",
+                  ultimaData: null,
+                };
+              }
+
+              const ultima = mensagens[mensagens.length - 1];
+
+              return {
+                ...contato,
+                ultimaMensagem: ultima.mensagem,
+                hora: new Date(ultima.data_envio).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+                ultimaData: ultima.data_envio,
+              };
+            } catch {
+              return {
+                ...contato,
+                ultimaMensagem: "",
+                hora: "",
+                ultimaData: null,
+              };
+            }
+          })
+        );
+
+        // Ordena pela conversa mais recente
+        lista.sort((a, b) => {
+          if (!a.ultimaData) return 1;
+          if (!b.ultimaData) return -1;
+          return new Date(b.ultimaData) - new Date(a.ultimaData);
+        });
+
         setContatos(lista);
 
-        if(lista.length > 0 && !contatoSelecionado) {
+        if (lista.length > 0 && !contatoSelecionado) {
           setContatoSelecionado(lista[0]);
         }
-
-      }catch(erro){
-        console.log("Erro ao carregar contatos: ",erro);
+      } catch (erro) {
+        console.log("Erro ao carregar contatos:", erro);
       }
     };
+    
 
     const carregarMensagens = async (idContato) => {
   try {
@@ -452,6 +502,9 @@ const handleSelecionarFoto = (e) => {
       setNovaSenha("");
       setConfirmarSenha("");
       alert("Perfil atualizado!");
+      
+      setArquivoFoto(null);
+
     } catch (erro) {
       console.log("Erro ao atualizar perfil:", erro);
     }
