@@ -478,7 +478,8 @@ const handleSelecionarFoto = (e) => {
     setFotoPreview(URL.createObjectURL(arquivo));
   };
 
-  const handleSalvarPerfil = async (e) => {
+
+const handleSalvarPerfil = async (e) => {
     e.preventDefault();
 
     if (novaSenha && novaSenha !== confirmarSenha) {
@@ -491,27 +492,42 @@ const handleSelecionarFoto = (e) => {
 
       const formData = new FormData();
       formData.append("nome_usuario", novoNomeUsuario);
-      if (novaSenha) formData.append("senha", novaSenha);
-      if (arquivoFoto) formData.append("foto_perfil", arquivoFoto);
 
-      // await api.put("/API/perfil", formData, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "multipart/form-data",
-      //   },
-      // });
+      if (novaSenha){ 
+        formData.append("senha", novaSenha);
+      }
 
-      setUsuario((prev) => (prev ? { ...prev, nome_usuario: novoNomeUsuario, foto_perfil: fotoPreview || prev.foto_perfil } : prev));
+      if (arquivoFoto){ 
+        formData.append("foto_perfil", arquivoFoto);
+      }
+
+      const response = await api.put("/API/perfil", formData, {
+        headers:{
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setUsuario(response.data);
+      setFotoPreview(response.data.foto_perfil);
       setNovaSenha("");
       setConfirmarSenha("");
-      alert("Perfil atualizado!");
-      
       setArquivoFoto(null);
 
+      alert("Perfil atualizado!");
+
     } catch (erro) {
+      if(erro.response?.status === 409){
+        alert(erro.response.data.mensagem);
+        return;
+      }
+
       console.log("Erro ao atualizar perfil:", erro);
+      alert("Erro ao atualizar perfil.");
     }
   };
+
+
 
   const contatosFiltrados = contatos.filter((c) =>
     c.nome_usuario.toLowerCase().includes(busca.toLowerCase())
