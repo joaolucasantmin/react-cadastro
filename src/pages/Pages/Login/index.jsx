@@ -14,6 +14,8 @@ export default function Login() {
         const [email, setEmail] = useState(""); 
         const [password, setPassword] = useState("");
 
+        const [mostrarSenha, setMostrarSenhaLogin] = useState(false);
+
         //Para erros de senha ou nickname ou email
         const [erroSenha, setErroSenha] = useState("");
         const [erroEmail, setErroEmail] = useState("");
@@ -96,14 +98,21 @@ export default function Login() {
                         <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
 
                         <input
-                            type="password" 
+                            type={mostrarSenhaLogin ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Digite sua senha..."
-                            className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-4 outline-none focus:border-orange-500
+                            className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-12 outline-none focus:border-orange-500
                                                                                                              focus:ring-2
                                                                                                              focus:ring-orange-200"
                         />
+                        <button
+                            type="button"
+                            onClick={() => setMostrarSenhaLogin(!mostrarSenhaLogin)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors"
+                        >
+                            {mostrarSenhaLogin ? <FaEyeSlash /> : <FaEye />}
+                        </button>
                     </div>
 
 

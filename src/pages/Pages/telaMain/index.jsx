@@ -14,6 +14,8 @@ import {
   FaUserPlus,
   FaTimes,
   FaCamera,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 import logo from "/src/assets/logo.png";
 
@@ -27,6 +29,9 @@ export default function Home() {
 
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
+
+  const [mostrarSenha, setMostrarNovaSenha] = useState(false);
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
   const [contatos, setContatos] = useState([]);
   const [contatoSelecionado, setContatoSelecionado] = useState(null);
@@ -621,7 +626,16 @@ const handleSalvarPerfil = async (e) => {
                     ativo ? "bg-orange-50" : "hover:bg-gray-50"
                   }`}
                 >
-                  <FaUserCircle className="text-4xl text-gray-300 shrink-0" />
+
+                  {contato.foto_perfil ? (
+                    <img
+                      src={contato.foto_perfil}
+                      alt={contato.nome_usuario}
+                      className="h-12 w-12 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <FaUserCircle className="text-4xl text-gray-300 shrink-0" />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
                       <span className="font-semibold text-gray-800 truncate">
@@ -927,26 +941,47 @@ const handleSalvarPerfil = async (e) => {
                     <label className="text-sm text-gray-600 mb-1 block">
                       Nova senha
                     </label>
+                   <div className="relative"> 
                     <input
-                      type="password"
+                      type={mostrarNovaSenha ? "text" : "password"}
                       value={novaSenha}
                       onChange={(e) => setNovaSenha(e.target.value)}
                       placeholder="Deixe em branco para não alterar"
                       className="w-full rounded-xl border border-gray-200 py-2.5 px-4 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                     />
+
+                    <button
+                      type="button"
+                      onClick={() => setMostrarNovaSenha(!mostrarNovaSenha)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500"
+                    >
+                      {mostrarNovaSenha ? <FaEyeSlash/> : <FaEye />}
+                    </button>
                   </div>
+                 </div>
 
                   {novaSenha && (
                     <div>
                       <label className="text-sm text-gray-600 mb-1 block">
                         Confirmar nova senha
                       </label>
-                      <input
-                        type="password"
-                        value={confirmarSenha}
-                        onChange={(e) => setConfirmarSenha(e.target.value)}
-                        className="w-full rounded-xl border border-gray-200 py-2.5 px-4 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-                      />
+
+                      <div className="relative">
+                        <input
+                          type={mostrarConfirmarSenha ? "text" : "password"}
+                          value={confirmarSenha}
+                          onChange={(e) => setConfirmarSenha(e.target.value)}
+                          className="w-full rounded-xl border border-gray-200 py-2.5 px-4 pr-12 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500"
+                        >
+                          {mostrarConfirmarSenha ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -973,7 +1008,16 @@ const handleSalvarPerfil = async (e) => {
                       className="flex items-center justify-between border border-gray-100 rounded-xl px-4 py-3"
                     >
                       <div className="flex items-center gap-3">
+
+                      {contatoSelecionado?.foto_perfil ?(
+                        <img
+                          src={contatoSelecionado.foto_perfil}
+                          alt={contatoSelecionado.nome_usuario}
+                          className="h-10 w-10 rounded-full object-cover shrink-0"
+                          />
+                      ) : (
                         <FaUserCircle className="text-3xl text-gray-300" />
+                        )}
                         <span className="font-medium text-gray-700">
                           {u.nome_usuario}
                         </span>

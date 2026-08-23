@@ -16,7 +16,10 @@ export default function Cadastro() {
         const [password, setPassword] = useState("");
         const [confirmPassword, setConfirmPassword] = useState("");
 
-        // Estado responsável pelo botão "Carregando..."
+        const [mostrarSenha, setMostrarSenhaCadastro] = useState(false);
+        
+
+// Estado responsável pelo botão "Carregando..."
 const [carregando, setCarregando] = useState(false);
 
 // Estados de erro
@@ -147,14 +150,21 @@ const handleSubmit = async (e) => {
                         <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
 
                         <input
-                            type="password" 
+                            type={setMostrarSenhaCadastro ? "text" : "password"} 
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Digite sua senha..."
-                            className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-4 outline-none focus:border-orange-500
+                            className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-12 outline-none focus:border-orange-500
                                                                                                              focus:ring-2
                                                                                                              focus:ring-orange-200"
                         />
+                        <button
+                            type="button"
+                            onClick={() => setMostrarSenhaCadastro(!mostrarSenhaCadastro)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors"
+                        >
+                            {mostrarSenhaCadastro ? <FaEyeSlash /> : <FaEye />}
+                        </button>
                     </div>
 
                     {/* Confirmar senha */}
