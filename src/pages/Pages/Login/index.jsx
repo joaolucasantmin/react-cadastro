@@ -2,7 +2,7 @@ import { useState } from "react";
 import api from '/src/services/api'
 import { useNavigate } from "react-router-dom";
 
-import { FaEnvelope, FaLock, FaShieldAlt } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaShieldAlt, FaEye, FaEyeSlash } from "react-icons/fa";
 import { AiFillEdit } from "react-icons/ai";
 import logo from "/src/assets/logo.png";
 import fundo from "/src/assets/fundo.jpg";

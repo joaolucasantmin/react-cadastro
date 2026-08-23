@@ -712,7 +712,17 @@ const handleSalvarPerfil = async (e) => {
               >
                 <FaArrowLeft />
               </button>
+
+           {contatoSelecionado?.foto_perfil ? (
+              <img
+                src={contatoSelecionado.foto_perfil}
+                alt={contatoSelecionado.nome_usuario}
+                className="h-10 w-10 rounded-full object-cover shrink-0 border border-gray-200"
+              />
+            ) : (
               <FaUserCircle className="text-3xl text-gray-300 shrink-0" />
+            )}
+
               <span className="font-semibold text-gray-800 truncate">
                 {contatoSelecionado?.nome_usuario || "Selecione uma conversa"}
               </span>
