@@ -14,7 +14,7 @@ export default function Login() {
         const [email, setEmail] = useState(""); 
         const [password, setPassword] = useState("");
 
-        const [mostrarSenha, setMostrarSenhaLogin] = useState(false);
+        const [mostrarSenhaLogin, setMostrarSenhaLogin] = useState(false);
 
         //Para erros de senha ou nickname ou email
         const [erroSenha, setErroSenha] = useState("");

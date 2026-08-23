@@ -30,7 +30,7 @@ export default function Home() {
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
 
-  const [mostrarSenha, setMostrarNovaSenha] = useState(false);
+  const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
   const [contatos, setContatos] = useState([]);

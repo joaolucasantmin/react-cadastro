@@ -16,7 +16,7 @@ export default function Cadastro() {
         const [password, setPassword] = useState("");
         const [confirmPassword, setConfirmPassword] = useState("");
 
-        const [mostrarSenha, setMostrarSenhaCadastro] = useState(false);
+        const [mostrarSenhaCadastro, setMostrarSenhaCadastro] = useState(false);
         
 
 // Estado responsável pelo botão "Carregando..."
