@@ -174,9 +174,13 @@ export default function Home() {
 
         setContatos(lista);
 
-        if (lista.length > 0 && !contatoSelecionado) {
-          setContatoSelecionado(lista[0]);
-        }
+
+        //Se tirar o comentario, passara a selecionar automaticamente o contato mais recente do chat
+        //if (lista.length > 0 && !contatoSelecionado) {
+        //  setContatoSelecionado(lista[0]);                 
+        //}
+
+
       } catch (erro) {
         console.log("Erro ao carregar contatos:", erro);
       }
@@ -786,44 +790,54 @@ const handleSalvarPerfil = async (e) => {
             ref={scrollRef}
             className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 space-y-2 bg-[#f7f7f8]"
           >
-            {mensagens.map((msg) => (
-              <div
-                key={msg.cod_mensagem}
-                className={`flex ${
-                  msg.cod_remetente === usuario.id
-                  ? "justify-end"
-                  : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[85%] md:max-w-[60%] rounded-xl px-4 py-2 shadow-sm ${
-                    msg.cod_remetente === usuario.id
-                      ? "bg-orange-500 text-white rounded-br-none"
-                      : "bg-white text-gray-800 rounded-bl-none"
-                  }`}
-                >
-                  <p className="text-sm">{msg.mensagem}</p>
-                  <span
-                    className={`block text-[10px] mt-1 text-right ${
+            {!contatoSelecionado ? (
+              <div className="h-full flex items-center justify-center">
+                <p className="text-center text-sm text-gray-400">
+                  Comece a conversar
+                </p>
+              </div>
+            ) : (
+              <>
+                {mensagens.map((msg) => (
+                  <div
+                    key={msg.cod_mensagem}
+                    className={`flex ${
                       msg.cod_remetente === usuario.id
-                      ? "text-orange-100"
-                      : "text-gray-400"
+                        ? "justify-end"
+                        : "justify-start"
                     }`}
                   >
-                    {new Date(msg.data_envio).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      timeZone: "America/Sao_Paulo",
-                    })}
-                  </span>
-                </div>
-              </div>
-            ))}
+                    <div
+                      className={`max-w-[85%] md:max-w-[60%] rounded-xl px-4 py-2 shadow-sm ${
+                        msg.cod_remetente === usuario.id
+                          ? "bg-orange-500 text-white rounded-br-none"
+                          : "bg-white text-gray-800 rounded-bl-none"
+                      }`}
+                    >
+                      <p className="text-sm">{msg.mensagem}</p>
+                      <span
+                        className={`block text-[10px] mt-1 text-right ${
+                          msg.cod_remetente === usuario.id
+                            ? "text-orange-100"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        {new Date(msg.data_envio).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: "America/Sao_Paulo",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
 
-            {mensagens.length === 0 && (
-              <p className="text-center text-sm text-gray-400 mt-10">
-                Nenhuma mensagem ainda. Diga oi 👋
-              </p>
+                {mensagens.length === 0 && (
+                  <p className="text-center text-sm text-gray-400 mt-10">
+                    Nenhuma mensagem ainda. Diga oi 👋
+                  </p>
+                )}
+              </>
             )}
           </div>
 
@@ -844,7 +858,8 @@ const handleSalvarPerfil = async (e) => {
               type="text"
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
-              placeholder="Digite uma mensagem..."
+              placeholder={contatoSelecionado ? "Digite uma mensagem..." : "Selecione uma conversa..."}
+              disabled={!contatoSelecionado}
               className="flex-1 rounded-xl border border-gray-200 py-2.5 px-4 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
             />
 
