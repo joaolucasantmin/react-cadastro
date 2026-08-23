@@ -150,7 +150,7 @@ const handleSubmit = async (e) => {
                         <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
 
                         <input
-                            type={setMostrarSenhaCadastro ? "text" : "password"} 
+                            type={mostrarSenhaCadastro ? "text" : "password"} 
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Digite sua senha..."

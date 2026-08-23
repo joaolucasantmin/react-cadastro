@@ -551,7 +551,7 @@ const handleSalvarPerfil = async (e) => {
 
 
   return (
-    <main className="h-screen w-screen flex flex-col bg-gray-100">
+    <main className="h-dvh w-screen flex flex-col bg-gray-100 overflow-hidden">
       {/* Corpo principal: sidebar + chat */}
       <div className="flex flex-1 min-h-0">
         {/* ---------------- SIDEBAR ---------------- */}
@@ -561,7 +561,7 @@ const handleSalvarPerfil = async (e) => {
           } md:flex w-full md:w-[380px] shrink-0 border-r border-gray-200 bg-white flex-col`}
         >
           {/* Pesquisa + adicionar amigo */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="p-4 border-b border-gray-200 shrink-0">
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -609,7 +609,7 @@ const handleSalvarPerfil = async (e) => {
           </div>
 
           {/* Lista de contatos */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto overscroll-contain">
             {contatosFiltrados.length === 0 && (
               <p className="text-center text-sm text-gray-400 mt-6">
                 Nenhuma conversa encontrada.
@@ -662,7 +662,7 @@ const handleSalvarPerfil = async (e) => {
           </div>
 
           {/* Rodapé sidebar: perfil (abre configurações) + Sair */}
-          <div className="p-4 border-t border-gray-200 flex justify-between items-center">
+          <div className="p-4 border-t border-gray-200 flex justify-between items-center shrink-0">
             <button
               type="button"
               onClick={() => {
@@ -784,7 +784,7 @@ const handleSalvarPerfil = async (e) => {
           {/* Mensagens */}
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-[#f7f7f8]"
+            className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 space-y-2 bg-[#f7f7f8]"
           >
             {mensagens.map((msg) => (
               <div

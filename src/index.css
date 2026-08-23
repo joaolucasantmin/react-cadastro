@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+html, body, #root {
+  height: 100%;
+  overscroll-behavior: none; /* impede o "puxão" de revelar espaço em branco fora do app */
+}
+
+body {
+  overflow: hidden; /* só as áreas internas com overflow-y-auto vão rolar */
+}
