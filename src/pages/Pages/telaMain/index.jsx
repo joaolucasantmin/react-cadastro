@@ -993,7 +993,52 @@ const handleSalvarPerfil = async (e) => {
                           : "bg-white text-gray-800 rounded-bl-none"
                       }`}
                     >
-                      <p className="text-sm">{msg.mensagem}</p>
+
+                      {/* Texto da mensagem */}
+                      {msg.mensagem && (
+                        <p className="text-sm">
+                          {msg.mensagem}
+                        </p>
+                      )}
+
+                      {/* Anexo */}
+                      {msg.arquivo_url && (
+                        <div className={msg.mensagem ? "mt-2" : ""}>
+
+                          {/* Caso seja uma imagem */}
+                          {msg.tipo_arquivo?.startsWith("image/") ? (
+                            <a
+                              href={msg.arquivo_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <img
+                                src={msg.arquivo_url}
+                                alt={msg.nome_arquivo}
+                                className="max-w-full max-h-60 rounded-lg object-contain cursor-pointer"
+                              />
+                            </a>
+                          ) : (
+
+                            /* Caso seja outro tipo de arquivo */
+                            <a
+                              href={msg.arquivo_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 underline"
+                            >
+                              <FaPaperclip />
+
+                              <span className="text-sm truncate">
+                                {msg.nome_arquivo}
+                              </span>
+                            </a>
+                          )}
+
+                        </div>
+                      )}
+
+                      {/* Horário */}
                       <span
                         className={`block text-[10px] mt-1 text-right ${
                           msg.cod_remetente === usuario.id
@@ -1007,9 +1052,12 @@ const handleSalvarPerfil = async (e) => {
                           timeZone: "America/Sao_Paulo",
                         })}
                       </span>
+
                     </div>
                   </div>
                 ))}
+
+
 
                 {mensagens.length === 0 && (
                   <p className="text-center text-sm text-gray-400 mt-10">
