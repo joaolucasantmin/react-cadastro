@@ -34,6 +34,7 @@ export default function Home() {
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
   const [contatos, setContatos] = useState([]);
+  const [pedidosAmizade, setPedidosAmizade] = useState([]);
   const [contatoSelecionado, setContatoSelecionado] = useState(null);
   const [mensagens, setMensagens] = useState([]);
   const [texto, setTexto] = useState("");
@@ -110,20 +111,17 @@ export default function Home() {
       try {
         const token = localStorage.getItem("token");
 
-        const response = await api.get("/API/usuarios", {
+        const response = await api.get("/API/amizades", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        // Remove o próprio usuário
-        const usuarios = response.data.usuarios.filter(
-          (u) => u.id !== usuario?.id
-        );
+        const amigos = response.data.amigos;
 
         // Busca a última mensagem de cada conversa
         const lista = await Promise.all(
-          usuarios.map(async (contato) => {
+          amigos.map(async (contato) => {
             try {
               const conversa = await api.get(`/API/mensagens/${contato.id}`, {
                 headers: {
@@ -175,16 +173,97 @@ export default function Home() {
         setContatos(lista);
 
 
-        //Se tirar o comentario, passara a selecionar automaticamente o contato mais recente do chat
-        //if (lista.length > 0 && !contatoSelecionado) {
-        //  setContatoSelecionado(lista[0]);                 
-        //}
-
-
       } catch (erro) {
         console.log("Erro ao carregar contatos:", erro);
       }
     };
+
+
+
+
+    const carregarPedidosAmizade = async () => {
+      try{
+        const token = localStorage.getItem("token");
+
+        const response = await api.get("/API/amizades/pedidos", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setPedidosAmizade(response.data.pedidos);
+
+      } catch(erro) {
+        console.log("Erro ao carregar pedidos de amizade: ", erro);
+      }
+    };
+
+
+
+    //ACEITAR AMIZADE
+    const handleAceitarAmizade = async (idAmizade) => {
+      try {
+        const token = localStorage.getItem("token");
+
+        await api.put(
+          `/API/amizades/${idAmizade}/aceitar`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        //Remove o pedido da lista
+        setPedidosAmizade((prev) => 
+          prev.filter((pedido) => pedido.id !== idAmizade)
+        );
+
+        //Atualiza a lista de amigos
+        await carregarContatos();
+
+        
+      } catch (erro) {
+        console.log("Erro ao aceitar pedido de amizade: ", erro);
+        alert(
+          erro.response?.data?.mensagem || "Erro ao aceitar pedido de amizade."
+        );
+      }
+    };
+
+
+    //RECUSAR AMIZADE
+    const handleRecusarAmizade = async (idAmizade) => {
+      try {
+        const token = localStorage.getItem("token");
+
+        await api.put(
+          `/API/amizades/${idAmizade}/recusar`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        //Remove o pedido da lista
+        setPedidosAmizade((prev) => 
+          prev.filter((pedido) => pedido.id !== idAmizade)
+        );
+
+
+      } catch (erro) {
+        console.log("Erro ao recusar pedido de amizade: ", erro);
+        alert(
+          erro.response?.data?.mensagem || "Erro ao recusar pedido de amizade."
+        );
+      }
+    };
+  
+
+
 
 
     const carregarMensagens = async (idContato) => {
@@ -209,6 +288,7 @@ export default function Home() {
     useEffect(() => {
       if (usuario) {
         carregarContatos();
+        carregarPedidosAmizade();
       }
     }, [usuario]);
 
@@ -451,20 +531,69 @@ const handleSelecionarContato = async (contato) => {
     }
   };
 
-  // ---------------------------------------------------------------------
-  // Adicionar amigo (ainda não funcional — só a interface por enquanto)
-  // ---------------------------------------------------------------------
+
+
+
+  // -------------------------------------------------------
+  // Adicionar amigo 
+  // -------------------------------------------------------
   const handleEnviarPedidoAmizade = () => {
     if (!nomeAmigoBusca.trim()) return;
 
-    // await api.post('/API/amizades', { nome_usuario: nomeAmigoBusca }, {
-    //   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    // });
+    try {
 
-    alert("Pedido de amizade enviado! (funcionalidade ainda em desenvolvimento)");
+    const token = localStorage.getItem("token");
+
+    // Primeiro busca os usuários pelo nome
+    const response = await api.get("/API/usuarios", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const usuarioEncontrado = response.data.usuarios.find(
+      (u) =>
+        u.nome_usuario.toLowerCase() ===
+        nomeAmigoBusca.trim().toLowerCase()
+    );
+
+    if (!usuarioEncontrado) {
+      alert("Usuário não encontrado.");
+      return;
+    }
+
+    // Envia o pedido
+    await api.post(
+      "/API/amizades",
+      {
+        destinatario: usuarioEncontrado.id,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert("Pedido de amizade enviado!");
     setNomeAmigoBusca("");
     setMostrarAdicionarAmigo(false);
+
+    } catch (erro) {
+
+    console.log("Erro ao enviar pedido de amizade:", erro);
+
+    alert(
+      erro.response?.data?.mensagem ||
+      "Erro ao enviar pedido de amizade."
+    );
+  }
+
   };
+
+
+
+
 
   // ---------------------------------------------------------------------
   // Configurações de perfil (nome, senha, foto)
@@ -1061,15 +1190,70 @@ const handleSalvarPerfil = async (e) => {
 
               {/* -------- Aba Amizades (solicitações pendentes) -------- */}
               {abaConfig === "amizades" && (
-                <div>
-                  <p className="text-sm text-gray-400 text-center py-6">
-                    Nenhuma solicitação de amizade pendente.
-                  </p>
-                  {/* Quando a API de amizades estiver pronta: listar aqui as
-                      solicitações recebidas, cada uma com botões de
-                      "Aceitar" e "Recusar". */}
+                <div className="space-y-4">
+
+                  {pedidosAmizade.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-6">
+                      Nenhuma solicitação de amizade pendente.
+                    </p>
+                  ) : (
+                    pedidosAmizade.map((pedido) => (
+                      <div
+                        key={pedido.id}
+                        className="flex items-center gap-3 border border-gray-100 rounded-xl px-4 py-3"
+                      >
+
+                        {/* Foto */}
+                        {pedido.usuarios?.foto_perfil ? (
+                          <img
+                            src={pedido.usuarios.foto_perfil}
+                            alt={pedido.usuarios.nome_usuario}
+                            className="h-12 w-12 rounded-full object-cover shrink-0"
+                          />
+                        ) : (
+                          <FaUserCircle className="text-4xl text-gray-300 shrink-0" />
+                        )}
+
+                        {/* Informações */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-700 truncate">
+                            {pedido.usuarios?.nome_usuario || "Usuário"}
+                          </p>
+
+                          <p className="text-xs text-gray-400">
+                            Enviou uma solicitação de amizade
+                          </p>
+
+                          {/* Botões */}
+                          <div className="flex gap-2 mt-2">
+
+                            <button
+                              type="button"
+                              onClick={() => handleAceitarAmizade(pedido.id)}
+                              className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium px-3 py-1.5 transition-colors"
+                            >
+                              Aceitar
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRecusarAmizade(pedido.id)}
+                              className="rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium px-3 py-1.5 transition-colors"
+                            >
+                              Recusar
+                            </button>
+
+                          </div>
+                        </div>
+
+                      </div>
+                    ))
+                  )}
+
                 </div>
               )}
+
+
             </div>
           </div>
         </div>
