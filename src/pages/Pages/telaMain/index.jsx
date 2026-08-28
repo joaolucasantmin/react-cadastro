@@ -286,11 +286,15 @@ export default function Home() {
 
 
     useEffect(() => {
-      if (usuario) {
+      if (!usuario) return;
+
+      const intervalo = setInterval(() => {
         carregarContatos();
         carregarPedidosAmizade();
-      }
-    }, [usuario]);
+      }, 10000); //10 Segundos  
+        
+      return() => clearInterval(intervalo);
+    }, [usuario]);  
 
 
   useEffect(() => {
@@ -1044,10 +1048,20 @@ const handleSalvarPerfil = async (e) => {
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
+                  <span className="flex items-center justfity-center gap-2"> 
                   {aba.label}
+                    
+                  {/*Contador de pedidos de amizade*/}
+                  {aba.id === "amizades" && pedidosAmizade.length > 0 &&(
+                    <span className="flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold">
+                      {pedidosAmizade.lenght}
+                    </span>
+                  )}
+                  </span>
                 </button>
               ))}
             </div>
+            
 
             <div className="p-6">
               {/* -------- Aba Perfil -------- */}
