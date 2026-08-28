@@ -291,7 +291,7 @@ export default function Home() {
       const intervalo = setInterval(() => {
         carregarContatos();
         carregarPedidosAmizade();
-      }, 10000); //10 Segundos  
+      }, 7000); //7 Segundos  
         
       return() => clearInterval(intervalo);
     }, [usuario]);  
