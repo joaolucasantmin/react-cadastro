@@ -537,7 +537,7 @@ const handleSelecionarContato = async (contato) => {
   // -------------------------------------------------------
   // Adicionar amigo 
   // -------------------------------------------------------
-  const handleEnviarPedidoAmizade = () => {
+  const handleEnviarPedidoAmizade = async () => {
     if (!nomeAmigoBusca.trim()) return;
 
     try {
