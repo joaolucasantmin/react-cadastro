@@ -37,6 +37,8 @@ export default function Home() {
   const [pedidosAmizade, setPedidosAmizade] = useState([]);
   const [contatoSelecionado, setContatoSelecionado] = useState(null);
   const [mensagens, setMensagens] = useState([]);
+  const [arquivoSelecionado, setArquivoSelecionado] = useState(null);
+  const [erroArquivo, setErroArquivo] = useState("");
   const [texto, setTexto] = useState("");
   const [busca, setBusca] = useState("");
 
@@ -392,18 +394,36 @@ const handleSelecionarContato = async (contato) => {
     setMenuOpcoesAberto(false);
   };
 
+
+
   const handleEnviarMensagem = async (e) => {
     e.preventDefault();
-    if (!texto.trim() || !contatoSelecionado) return;
 
-    try{
+    if (!contatoSelecionado) return;
+
+    // Não envia se não tiver texto nem arquivo
+    if (!texto.trim() && !arquivoSelecionado) return;
+
+    try {
       const token = localStorage.getItem("token");
 
-      await api.post("/API/mensagens",
-        {
-          destinatario: contatoSelecionado.id,
-          mensagem: texto.trim(),
-        },
+      const formData = new FormData();
+
+      formData.append("destinatario", contatoSelecionado.id);
+
+      // Adiciona o texto somente se existir
+      if (texto.trim()) {
+        formData.append("mensagem", texto.trim());
+      }
+
+      // Adiciona o arquivo somente se existir
+      if (arquivoSelecionado) {
+        formData.append("arquivo", arquivoSelecionado);
+      }
+
+      const response = await api.post(
+        "/API/mensagens",
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -411,11 +431,26 @@ const handleSelecionarContato = async (contato) => {
         }
       );
 
+      // Limpa o campo de texto
       setTexto("");
 
+      // Limpa o arquivo selecionado
+      setArquivoSelecionado(null);
+
+      // Limpa erro de arquivo
+      setErroArquivo("");
+
+      // Limpa o input de arquivo
+      const inputArquivo = document.getElementById("input-arquivo");
+
+      if (inputArquivo) {
+        inputArquivo.value = "";
+      }
+
+      // Atualiza a mensagem no topo do contato
       atualizarContatoNoTopo(
         contatoSelecionado.id,
-        texto.trim(),
+        response.data.mensagem || response.data.nome_arquivo || "📎 Anexo",
         new Date().toLocaleTimeString("pt-BR", {
           hour: "2-digit",
           minute: "2-digit",
@@ -423,8 +458,19 @@ const handleSelecionarContato = async (contato) => {
         })
       );
 
-    }catch(erro){
+    } catch (erro) {
+
       console.log("Erro ao enviar mensagem: ", erro);
+
+      if (erro.response?.status === 413) {
+        setErroArquivo("O arquivo não pode ultrapassar 10 MB.");
+        return;
+      }
+
+      alert(
+        erro.response?.data?.mensagem ||
+        "Erro ao enviar mensagem."
+      );
     }
   };
 
@@ -974,18 +1020,47 @@ const handleSalvarPerfil = async (e) => {
             )}
           </div>
 
+
+
           {/* Campo de digitar */}
           <form
             onSubmit={handleEnviarMensagem}
-            className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 flex items-center gap-3"
+            className="relative shrink-0 border-t border-gray-200 bg-white px-4 py-3 flex items-center gap-3"
           >
-            <button
-              type="button"
-              className="text-gray-400 hover:text-orange-500 transition-colors text-xl"
+            <label
+              htmlFor="input-arquivo"
+              className={`text-gray-400 hover:text-orange-500 transition-colors text-xl cursor-pointer ${
+                !contatoSelecionado ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               title="Anexar arquivo"
             >
               <FaPaperclip />
-            </button>
+
+              <input
+                id="input-arquivo"
+                type="file"
+                className="hidden"
+                disabled={!contatoSelecionado}
+                onChange={(e) => {
+                  const arquivo = e.target.files[0];
+
+                  if (!arquivo) return;
+
+                  setErroArquivo("");
+
+                  // Limite de 10 MB
+                  if (arquivo.size > 10 * 1024 * 1024) {
+                    setErroArquivo("O arquivo não pode ultrapassar 10 MB.");
+                    e.target.value = "";
+                    setArquivoSelecionado(null);
+                    return;
+                  }
+
+                  setArquivoSelecionado(arquivo);
+                }}
+              />
+            </label>
+
 
             <input
               type="text"
@@ -1003,6 +1078,37 @@ const handleSalvarPerfil = async (e) => {
             >
               <FaPaperPlane className="text-sm" />
             </button>
+
+             {/*Mostra o Arquivo Selecionado para envio*/}     
+             {arquivoSelecionado && (
+              <div className="absolute bottom-16 left-4 bg-gray-100 rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+                <FaPaperclip className="text-orange-500" />
+
+                <span className="max-w-50 truncate">
+                  {arquivoSelecionado.name}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                  setArquivoSelecionado(null);
+                  setErroArquivo("");
+                }}
+                  className="text-gray-400 hover:text-red-500"
+                  title="Remover anexo"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {/*Mostra erro do arquivo exceder o limite máximo*/} 
+            {erroArquivo && (
+              <div className="absolute bottom-16 left-4 text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">
+                {erroArquivo}
+              </div>
+            )}
+
           </form>
         </section>
       </div>
