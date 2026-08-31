@@ -31,6 +31,7 @@ export default function Home() {
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [enviandoMensagem, setEnviandoMensagem] = useState(false);
+  const [salvandoAlteracoes, setSalvandoAlteracoes] = useState(false);
 
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
@@ -44,6 +45,9 @@ export default function Home() {
   const [erroArquivo, setErroArquivo] = useState("");
   const [texto, setTexto] = useState("");
   const [busca, setBusca] = useState("");
+
+  // Toast de feedback (sucesso / erro / info), substitui os alert()
+  const [toast, setToast] = useState(null); // { tipo: "sucesso" | "erro" | "info", mensagem }
 
   // No mobile só um painel aparece por vez: lista de conversas OU chat aberto.
   // A partir do breakpoint md, os dois painéis ficam sempre visíveis lado a lado.
@@ -69,6 +73,17 @@ export default function Home() {
   const [arquivoFoto, setArquivoFoto] = useState(null);
 
   const scrollRef = useRef(null);
+
+  // Mostra um toast e some sozinho depois de alguns segundos
+  const mostrarToast = (tipo, mensagem) => {
+    setToast({ tipo, mensagem });
+  };
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   // Verificação de login + busca do perfil
   useEffect(() => {
@@ -231,7 +246,8 @@ export default function Home() {
         
       } catch (erro) {
         console.log("Erro ao aceitar pedido de amizade: ", erro);
-        alert(
+        mostrarToast(
+          "erro",
           erro.response?.data?.mensagem || "Erro ao aceitar pedido de amizade."
         );
       }
@@ -261,7 +277,8 @@ export default function Home() {
 
       } catch (erro) {
         console.log("Erro ao recusar pedido de amizade: ", erro);
-        alert(
+        mostrarToast(
+          "erro",
           erro.response?.data?.mensagem || "Erro ao recusar pedido de amizade."
         );
       }
@@ -362,6 +379,28 @@ export default function Home() {
 
 
 
+  // -----------------------------------------------------------------------
+  // Intercepta o botão/gesto "voltar" do celular: se o modal de configurações
+  // ou o chat estiverem abertos, fecha eles em vez de deixar o navegador
+  // sair da página (o que levava direto pra tela de login).
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const handlePopState = () => {
+      if (modalConfigAberto) {
+        setModalConfigAberto(false);
+        return;
+      }
+      if (chatAberto) {
+        setChatAberto(false);
+        setMenuOpcoesAberto(false);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [chatAberto, modalConfigAberto]);
+
+
   
   // Atualiza a última mensagem e move a conversa para o topo
   const atualizarContatoNoTopo = (idContato, ultimaMensagem, hora) => {
@@ -389,12 +428,15 @@ const handleSelecionarContato = async (contato) => {
   setChatAberto(true);
   setMenuOpcoesAberto(false);
 
+  // Cria uma entrada extra no histórico: assim o botão "voltar" do celular
+  // fecha o chat em vez de sair direto da página
+  window.history.pushState({ chatAberto: true }, "");
+
   await carregarMensagens(contato.id);
   };
 
   const handleVoltarParaLista = () => {
-    setChatAberto(false);
-    setMenuOpcoesAberto(false);
+    window.history.back();
   };
 
 
@@ -474,9 +516,9 @@ const handleSelecionarContato = async (contato) => {
         return;
       }
 
-      alert(
-        erro.response?.data?.mensagem ||
-        "Erro ao enviar mensagem."
+      mostrarToast(
+        "erro",
+        erro.response?.data?.mensagem || "Erro ao enviar mensagem."
       );
 
     } finally{
@@ -619,7 +661,7 @@ const handleSelecionarContato = async (contato) => {
     );
 
     if (!usuarioEncontrado) {
-      alert("Usuário não encontrado.");
+      mostrarToast("erro", "Usuário não encontrado.");
       return;
     }
 
@@ -636,7 +678,7 @@ const handleSelecionarContato = async (contato) => {
       }
     );
 
-    alert("Pedido de amizade enviado!");
+    mostrarToast("sucesso", "Pedido de amizade enviado!");
     setNomeAmigoBusca("");
     setMostrarAdicionarAmigo(false);
 
@@ -644,9 +686,9 @@ const handleSelecionarContato = async (contato) => {
 
     console.log("Erro ao enviar pedido de amizade:", erro);
 
-    alert(
-      erro.response?.data?.mensagem ||
-      "Erro ao enviar pedido de amizade."
+    mostrarToast(
+      "erro",
+      erro.response?.data?.mensagem || "Erro ao enviar pedido de amizade."
     );
   }
 
@@ -681,10 +723,24 @@ const handleSelecionarFoto = (e) => {
 const handleSalvarPerfil = async (e) => {
     e.preventDefault();
 
-    if (novaSenha && novaSenha !== confirmarSenha) {
-      alert("As senhas não coincidem.");
+    if (salvandoAlteracoes) return;
+
+    // Verifica se algo realmente mudou antes de disparar a requisição
+    const nomeAlterado = novoNomeUsuario.trim() !== (usuario?.nome_usuario || "");
+    const senhaAlterada = !!novaSenha;
+    const fotoAlterada = !!arquivoFoto;
+
+    if (!nomeAlterado && !senhaAlterada && !fotoAlterada) {
+      mostrarToast("info", "Nenhuma alteração feita.");
       return;
     }
+
+    if (novaSenha && novaSenha !== confirmarSenha) {
+      mostrarToast("erro", "As senhas não coincidem.");
+      return;
+    }
+
+    setSalvandoAlteracoes(true);
 
     try {
       const token = localStorage.getItem("token");
@@ -713,16 +769,19 @@ const handleSalvarPerfil = async (e) => {
       setConfirmarSenha("");
       setArquivoFoto(null);
 
-      alert("Perfil atualizado!");
+      mostrarToast("sucesso", "Perfil atualizado!");
 
     } catch (erro) {
       if(erro.response?.status === 409){
-        alert(erro.response.data.mensagem);
+        mostrarToast("erro", erro.response.data.mensagem);
         return;
       }
 
       console.log("Erro ao atualizar perfil:", erro);
-      alert("Erro ao atualizar perfil.");
+      mostrarToast("erro", "Erro ao atualizar perfil.");
+
+    } finally {
+      setSalvandoAlteracoes(false);
     }
   };
 
@@ -862,6 +921,9 @@ const handleSalvarPerfil = async (e) => {
               onClick={() => {
                 setAbaConfig("perfil");
                 setModalConfigAberto(true);
+                // Cria uma entrada extra no histórico: assim o botão "voltar"
+                // do celular fecha o modal em vez de sair da página
+                window.history.pushState({ modalAberto: true }, "");
               }}
               className="flex items-center gap-2 text-left"
               title="Abrir configurações"
@@ -1216,7 +1278,7 @@ const handleSalvarPerfil = async (e) => {
       {modalConfigAberto && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
-          onClick={() => setModalConfigAberto(false)}
+          onClick={() => window.history.back()}
         >
           <div
             className="bg-white rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto"
@@ -1227,7 +1289,7 @@ const handleSalvarPerfil = async (e) => {
               <h2 className="font-semibold text-gray-800 text-lg">Configurações</h2>
               <button
                 type="button"
-                onClick={() => setModalConfigAberto(false)}
+                onClick={() => window.history.back()}
                 className="text-gray-400 hover:text-gray-600 text-xl"
               >
                 <FaTimes />
@@ -1257,7 +1319,7 @@ const handleSalvarPerfil = async (e) => {
                   {/*Contador de pedidos de amizade*/}
                   {aba.id === "amizades" && pedidosAmizade.length > 0 &&(
                     <span className="flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold">
-                      {pedidosAmizade.lenght}
+                      {pedidosAmizade.length}
                     </span>
                   )}
                   </span>
@@ -1358,9 +1420,14 @@ const handleSalvarPerfil = async (e) => {
 
                   <button
                     type="submit"
-                    className="w-full rounded-xl bg-orange-500 py-2.5 text-white font-semibold hover:bg-orange-600 transition-colors"
+                    disabled={salvandoAlteracoes}
+                    className={`w-full rounded-xl py-2.5 text-white font-semibold transition-colors ${
+                      salvandoAlteracoes
+                        ? "bg-orange-300 cursor-not-allowed"
+                        : "bg-orange-500 hover:bg-orange-600"
+                    }`}
                   >
-                    Salvar alterações
+                    {salvandoAlteracoes ? "Carregando..." : "Salvar alterações"}
                   </button>
                 </form>
               )}
@@ -1473,6 +1540,21 @@ const handleSalvarPerfil = async (e) => {
 
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ---------------- TOAST ---------------- */}
+      {toast && (
+        <div
+          className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white ${
+            toast.tipo === "sucesso"
+              ? "bg-green-500"
+              : toast.tipo === "erro"
+              ? "bg-red-500"
+              : "bg-blue-500"
+          }`}
+        >
+          {toast.mensagem}
         </div>
       )}
     </main>
