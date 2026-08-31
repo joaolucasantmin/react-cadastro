@@ -30,6 +30,7 @@ export default function Home() {
 
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
+  const [enviandoMensagem, setEnviandoMensagem] = useState(false);
 
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
@@ -401,10 +402,14 @@ const handleSelecionarContato = async (contato) => {
   const handleEnviarMensagem = async (e) => {
     e.preventDefault();
 
+    if(enviandoMensagem) return;
+
     if (!contatoSelecionado) return;
 
     // Não envia se não tiver texto nem arquivo
     if (!texto.trim() && !arquivoSelecionado) return;
+
+    setEnviandoMensagem(true);
 
     try {
       const token = localStorage.getItem("token");
@@ -473,6 +478,10 @@ const handleSelecionarContato = async (contato) => {
         erro.response?.data?.mensagem ||
         "Erro ao enviar mensagem."
       );
+
+    } finally{
+
+      setEnviandoMensagem(false);
     }
   };
 
@@ -989,33 +998,39 @@ const handleSalvarPerfil = async (e) => {
                     }`}
                   >
                     <div
-                      className={`max-w-[85%] md:max-w-[60%] rounded-xl px-4 py-2 shadow-sm ${
+                      onDoubleClick={() =>
+                        setMensagemSelecionada(
+                          mensagemSelecionada === msg.cod_mensagem
+                            ? null
+                            : msg.cod_mensagem
+                        )
+                      }
+                      className={`relative max-w-[85%] md:max-w-[60%] rounded-xl px-4 py-2 shadow-sm cursor-pointer transition-all ${
                         msg.cod_remetente === usuario.id
                           ? "bg-orange-500 text-white rounded-br-none"
                           : "bg-white text-gray-800 rounded-bl-none"
-                      }${
+                      } ${
                         mensagemSelecionada === msg.cod_mensagem
                           ? "ring-2 ring-orange-300"
                           : ""
                       }`}
                     >
 
-                       {/* Botão de excluir */}
-                        {mensagemSelecionada === msg.cod_mensagem &&
-                          msg.cod_remetente === usuario.id && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log("Excluir mensagem:", msg.cod_mensagem);
-                              }}
-                              className="absolute -top-3 -right-3 h-8 w-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md transition-colors"
-                              title="Excluir mensagem"
-                            >
-                              <FaTrash className="text-xs" />
-                            </button>
-                          )}
-
+                      {/* Botão de excluir */}
+                      {mensagemSelecionada === msg.cod_mensagem &&
+                        msg.cod_remetente === usuario.id && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log("Excluir mensagem:", msg.cod_mensagem);
+                            }}
+                            className="absolute -top-3 -right-3 h-8 w-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md transition-colors"
+                            title="Excluir mensagem"
+                          >
+                            <FaTrash className="text-xs" />
+                          </button>
+                        )}
 
                       {/* Texto da mensagem */}
                       {msg.mensagem && (
@@ -1028,7 +1043,7 @@ const handleSalvarPerfil = async (e) => {
                       {msg.arquivo_url && (
                         <div className={msg.mensagem ? "mt-2" : ""}>
 
-                          {/* Caso seja uma imagem */}
+                          {/* Imagem */}
                           {msg.tipo_arquivo?.startsWith("image/") ? (
                             <a
                               href={msg.arquivo_url}
@@ -1044,7 +1059,7 @@ const handleSalvarPerfil = async (e) => {
                             </a>
                           ) : (
 
-                            /* Caso seja outro tipo de arquivo */
+                            /* Outros arquivos */
                             <a
                               href={msg.arquivo_url}
                               target="_blank"
@@ -1146,10 +1161,19 @@ const handleSalvarPerfil = async (e) => {
 
             <button
               type="submit"
-              className="rounded-xl bg-orange-500 hover:bg-orange-600 text-white h-10 w-10 flex items-center justify-center transition-colors"
-              title="Enviar"
+              disabled={enviandoMensagem}
+              className={`rounded-xl text-white h-10 w-10 flex items-center justify-center transition-colors ${
+                carregando
+                  ? "bg-orange-300 cursor-not-allowed"
+                  : "bg-orange-500 hover:bg-orange-600"
+              }`}
+              title={carregando ? "Enviando..." : "Enviar"}
             >
-              <FaPaperPlane className="text-sm" />
+              {carregando ? (
+                <span className="text-sm">...</span>
+              ) : (
+                <FaPaperPlane className="text-sm" />
+              )}
             </button>
 
              {/*Mostra o Arquivo Selecionado para envio*/}     
