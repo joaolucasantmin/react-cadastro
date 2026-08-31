@@ -1163,13 +1163,13 @@ const handleSalvarPerfil = async (e) => {
               type="submit"
               disabled={enviandoMensagem}
               className={`rounded-xl text-white h-10 w-10 flex items-center justify-center transition-colors ${
-                carregando
+                enviandoMensagem
                   ? "bg-orange-300 cursor-not-allowed"
                   : "bg-orange-500 hover:bg-orange-600"
               }`}
-              title={carregando ? "Enviando..." : "Enviar"}
+              title={enviandoMensagem ? "Enviando..." : "Enviar"}
             >
-              {carregando ? (
+              {enviandoMensagem ? (
                 <span className="text-sm">...</span>
               ) : (
                 <FaPaperPlane className="text-sm" />
