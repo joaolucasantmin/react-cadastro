@@ -16,6 +16,7 @@ import {
   FaCamera,
   FaEye,
   FaEyeSlash,
+  FaTrash,
 } from "react-icons/fa";
 import logo from "/src/assets/logo.png";
 
@@ -38,6 +39,7 @@ export default function Home() {
   const [contatoSelecionado, setContatoSelecionado] = useState(null);
   const [mensagens, setMensagens] = useState([]);
   const [arquivoSelecionado, setArquivoSelecionado] = useState(null);
+  const [mensagemSelecionada, setMensagemSelecionada] = useState(null);
   const [erroArquivo, setErroArquivo] = useState("");
   const [texto, setTexto] = useState("");
   const [busca, setBusca] = useState("");
@@ -991,8 +993,29 @@ const handleSalvarPerfil = async (e) => {
                         msg.cod_remetente === usuario.id
                           ? "bg-orange-500 text-white rounded-br-none"
                           : "bg-white text-gray-800 rounded-bl-none"
+                      }${
+                        mensagemSelecionada === msg.cod_mensagem
+                          ? "ring-2 ring-orange-300"
+                          : ""
                       }`}
                     >
+
+                       {/* Botão de excluir */}
+                        {mensagemSelecionada === msg.cod_mensagem &&
+                          msg.cod_remetente === usuario.id && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log("Excluir mensagem:", msg.cod_mensagem);
+                              }}
+                              className="absolute -top-3 -right-3 h-8 w-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md transition-colors"
+                              title="Excluir mensagem"
+                            >
+                              <FaTrash className="text-xs" />
+                            </button>
+                          )}
+
 
                       {/* Texto da mensagem */}
                       {msg.mensagem && (
@@ -1011,6 +1034,7 @@ const handleSalvarPerfil = async (e) => {
                               href={msg.arquivo_url}
                               target="_blank"
                               rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               <img
                                 src={msg.arquivo_url}
@@ -1025,6 +1049,7 @@ const handleSalvarPerfil = async (e) => {
                               href={msg.arquivo_url}
                               target="_blank"
                               rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
                               className="flex items-center gap-2 underline"
                             >
                               <FaPaperclip />
