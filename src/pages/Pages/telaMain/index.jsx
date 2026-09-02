@@ -313,7 +313,7 @@ export default function Home() {
       const intervalo = setInterval(() => {
         carregarContatos();
         carregarPedidosAmizade();
-      }, 7000); //7 Segundos  
+      }, 5000); //5 Segundos  
         
       return() => clearInterval(intervalo);
     }, [usuario]);  
@@ -526,6 +526,37 @@ const handleSelecionarContato = async (contato) => {
       setEnviandoMensagem(false);
     }
   };
+
+
+
+
+  const handleExcluirMensagem = async (idMensagem) => {
+    
+    try {
+    const token = localStorage.getItem("token");
+
+    await api.delete(`/API/mensagens/${idMensagem}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Remove a mensagem da tela
+    setMensagens((mensagensAtuais) =>
+      mensagensAtuais.filter(
+        (msg) => msg.cod_mensagem !== idMensagem
+      )
+    );
+
+    // Cancela a seleção
+    setMensagemSelecionada(null);
+
+  } catch (erro) {
+    console.log("Erro ao excluir mensagem:", erro);
+  }
+
+  };
+
 
 
 
@@ -1085,7 +1116,7 @@ const handleSalvarPerfil = async (e) => {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log("Excluir mensagem:", msg.cod_mensagem);
+                              handleExcluirMensagem(msg.cod_mensagem);
                             }}
                             className="absolute -top-3 -right-3 h-8 w-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center shadow-md transition-colors"
                             title="Excluir mensagem"
@@ -1124,6 +1155,7 @@ const handleSalvarPerfil = async (e) => {
                             /* Outros arquivos */
                             <a
                               href={msg.arquivo_url}
+                              download={msg.nome_arquivo}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
@@ -1134,6 +1166,11 @@ const handleSalvarPerfil = async (e) => {
                               <span className="text-sm truncate">
                                 {msg.nome_arquivo}
                               </span>
+
+                              <span className="text-xs opacity-70">
+                                Baixar
+                              </span>
+
                             </a>
                           )}
 
