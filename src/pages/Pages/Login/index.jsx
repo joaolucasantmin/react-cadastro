@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from '/src/services/api'
 import { useNavigate } from "react-router-dom";
 
@@ -16,9 +16,23 @@ export default function Login() {
 
         const [mostrarSenhaLogin, setMostrarSenhaLogin] = useState(false);
 
-        //Para erros de senha ou nickname ou email
-        const [erroSenha, setErroSenha] = useState("");
-        const [erroEmail, setErroEmail] = useState("");
+        
+        // Toast de respostas para erros ou sucessos
+        const [toast, setToast] = useState(null);
+
+        // Mostra um toast e some sozinho depois de alguns segundos
+        const mostrarToast = (tipo, mensagem) => {
+            setToast({ tipo, mensagem });
+        };
+
+        useEffect(() => {
+            if (!toast) return;
+
+            const timer = setTimeout(() => setToast(null), 3000);
+
+            return () => clearTimeout(timer);
+        }, [toast]);
+
 
         
         // Estado do botão
@@ -30,8 +44,7 @@ export default function Login() {
         if (carregando) return; // evita dois cliques
 
         setCarregando(true);
-        setErroSenha("");
-        setErroEmail("");
+        
 
         const dados = {
             email_usuario: email,
@@ -44,9 +57,17 @@ export default function Login() {
             // Salva o token sem exibi-lo no console
             localStorage.setItem("token", data.token);
 
-            navigate("/home");
-        } catch (error) {
-            alert("Email ou senha incorretos!");
+            mostrarToast("sucesso", "Login realizado!");
+
+                setTimeout(() => {
+                    navigate("/home");
+                }, 500);
+
+            } catch (error) {
+                mostrarToast(
+                    "erro",
+                    error.response?.data?.error || "E-mail ou senha incorretos."
+                );
         } finally {
             setCarregando(false);
         }
@@ -85,11 +106,7 @@ export default function Login() {
                                                                                                              focus:ring-2
                                                                                                              focus:ring-orange-200"
                         />
-                        {erroEmail && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {erroEmail}
-                            </p>
-                        )}
+                        
                     </div>
 
 
@@ -107,7 +124,7 @@ export default function Login() {
                                                                                                              focus:ring-orange-200"
                         />
                         <button
-                            type="button"
+                            type="submit"
                             onClick={() => setMostrarSenhaLogin(!mostrarSenhaLogin)}
                             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors"
                         >
@@ -120,7 +137,6 @@ export default function Login() {
                     {/* Botão */}
                     <button
                         type="submit"
-                        onClick={handleSubmit}
                         disabled = {carregando}
                         className="w-full rounded-xl bg-orange-500 py-3 text-white font-semibold transition-all duration-300 hover:bg-orange-600 hover:scale-[1.02]"
                     >
@@ -139,6 +155,22 @@ export default function Login() {
                 </form>
 
             </div>
+
+            {/* ---------------- TOAST ---------------- */}
+                {toast && (
+                    <div
+                        className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white ${
+                            toast.tipo === "sucesso"
+                                ? "bg-green-500"
+                                : toast.tipo === "erro"
+                                ? "bg-red-500"
+                                : "bg-blue-500"
+                        }`}
+                    >
+                        {toast.mensagem}
+                    </div>
+                )}
+
 
         </main>
     );
