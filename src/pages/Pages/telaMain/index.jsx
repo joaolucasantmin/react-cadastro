@@ -1137,20 +1137,20 @@ const handleSalvarPerfil = async (e) => {
                         <div className={msg.mensagem ? "mt-2" : ""}>
 
                           {/* Imagem */}
-                          {msg.tipo_arquivo?.startsWith("image/") ? (
-                            <a
-                              href={msg.arquivo_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <img
-                                src={msg.arquivo_url}
-                                alt={msg.nome_arquivo}
-                                className="max-w-full max-h-60 rounded-lg object-contain cursor-pointer"
-                              />
-                            </a>
-                          ) : (
+                            {msg.tipo_arquivo?.startsWith("image/") ? (
+                              <a
+                                href={msg.arquivo_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <img
+                                  src={msg.arquivo_url}
+                                  alt={msg.nome_arquivo}
+                                  className="max-w-full max-h-60 rounded-lg object-contain cursor-pointer"
+                                />
+                              </a>
+                            ) : (
 
                             /* Outros arquivos */
                             <a
