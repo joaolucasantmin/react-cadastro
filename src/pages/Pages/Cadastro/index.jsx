@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { FaEnvelope, FaLock, FaShieldAlt, FaEye, FaEyeSlash } from "react-icons/fa";
@@ -22,23 +22,35 @@ export default function Cadastro() {
 // Estado responsável pelo botão "Carregando..."
 const [carregando, setCarregando] = useState(false);
 
-// Estados de erro
-const [erroSenha, setErroSenha] = useState("");
-const [erroEmail, setErroEmail] = useState("");
-const [erroNome, setErroNome] = useState("");
+
+
+// Toast de respostas para erros ou sucessos
+const [toast, setToast] = useState(null);
+
+// Mostra um toast e some sozinho depois de alguns segundos
+const mostrarToast = (tipo, mensagem) => {
+    setToast({ tipo, mensagem });
+};
+
+useEffect(() => {
+    if (!toast) return;
+
+    const timer = setTimeout(() => setToast(null), 3000);
+
+    return () => clearTimeout(timer);
+}, [toast]);
+
+
+
 
 const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (carregando) return; // evita clique duplo
+    if (carregando) return;
 
-    setErroSenha("");
-    setErroEmail("");
-    setErroNome("");
-
-    // Validação antes de iniciar o carregamento
+    // Validação das senhas
     if (password !== confirmPassword) {
-        setErroSenha("As senhas não coincidem.");
+        mostrarToast("erro", "As senhas não coincidem.");
         return;
     }
 
@@ -53,8 +65,11 @@ const handleSubmit = async (e) => {
     try {
         await api.post("/API/cadastro", dados);
 
-        alert("Usuário Cadastrado!");
-        navigate("/login");
+        mostrarToast("sucesso", "Cadastro realizado!");
+
+        setTimeout(() => {
+            navigate("/login");
+        }, 1000);
 
     } catch (error) {
 
@@ -62,21 +77,19 @@ const handleSubmit = async (e) => {
             const mensagem = error.response.data.error;
 
             if (mensagem === "Este e-mail já está cadastrado.") {
-                setErroEmail(mensagem);
+                mostrarToast("erro", "E-mail já cadastrado.");
             } else if (mensagem === "Este nome de usuário já está em uso.") {
-                setErroNome(mensagem);
+                mostrarToast("erro", "Nome de usuário já existe.");
             } else {
-                alert(mensagem);
+                mostrarToast("erro", mensagem || "Erro ao realizar cadastro.");
             }
         } else {
-            alert("Erro ao conectar com o servidor.");
+            mostrarToast("erro", "Erro ao conectar com o servidor.");
         }
 
     } finally {
         setCarregando(false);
     }
-
-    // console.log(dados); DESCOMENTE APENAS CASO PRECISE VERIFICAR O CONSOLE NO SITE
 };
 
 
@@ -117,11 +130,7 @@ const handleSubmit = async (e) => {
                                                                                                              focus:ring-2
                                                                                                              focus:ring-orange-200"
                         />
-                        {erroEmail && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {erroEmail}
-                            </p>
-                        )}
+                    
                     </div>
 
                     {/* Nome de usuario */}
@@ -137,11 +146,7 @@ const handleSubmit = async (e) => {
                                                                                                              focus:ring-2
                                                                                                              focus:ring-orange-200"
                         />
-                        {erroNome && (
-                        <p className="text-red-500 text-sm mt-1">
-                            {erroNome}
-                        </p>
-                    )}
+                        
                     </div>
 
 
@@ -178,11 +183,7 @@ const handleSubmit = async (e) => {
                             placeholder="Confirme sua senha..."
                             className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-4 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                         />
-                        {erroSenha && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {erroSenha}
-                            </p>
-                        )}
+                        
                     </div>
 
 
@@ -206,6 +207,23 @@ const handleSubmit = async (e) => {
                 </form>
 
             </div>
+
+
+            {/* ---------------- TOAST ---------------- */}
+                {toast && (
+                    <div
+                        className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white ${
+                            toast.tipo === "sucesso"
+                                ? "bg-green-500"
+                                : toast.tipo === "erro"
+                                ? "bg-red-500"
+                                : "bg-blue-500"
+                        }`}
+                    >
+                        {toast.mensagem}
+                    </div>
+                )}
+
 
         </main>
     );
