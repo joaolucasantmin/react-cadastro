@@ -342,28 +342,40 @@ export default function Home() {
       (payload) => {
         const msg = payload.new;
 
-        const ehDaConversa =
-          (msg.cod_remetente === usuario.id &&
+        // Mensagem pertence à conversa que está aberta na tela agora?
+        const ehDaConversaAberta =
+          chatAberto &&
+          ((msg.cod_remetente === usuario.id &&
             msg.cod_destinatario === contatoSelecionado.id) ||
-          (msg.cod_remetente === contatoSelecionado.id &&
-            msg.cod_destinatario === usuario.id);
+            (msg.cod_remetente === contatoSelecionado.id &&
+              msg.cod_destinatario === usuario.id));
 
-        if (ehDaConversa) {
+        // Mensagem é destinada a mim (de qualquer contato)?
+        const ehParaMim = msg.cod_destinatario === usuario.id;
+
+        if (ehDaConversaAberta) {
           setMensagens((prev) => [...prev, msg]);
+        }
 
+        if (ehDaConversaAberta || ehParaMim) {
           const outroId =
             msg.cod_remetente === usuario.id
               ? msg.cod_destinatario
               : msg.cod_remetente;
 
+          // Só marca como "não lida" se a mensagem for para mim e a
+          // conversa com quem enviou NÃO estiver aberta na tela.
+          const marcarNaoLida = ehParaMim && !ehDaConversaAberta;
+
           atualizarContatoNoTopo(
             outroId,
-            msg.mensagem,
+            msg.mensagem || (msg.arquivo_url ? "📎 Anexo" : ""),
             new Date(msg.data_envio).toLocaleTimeString("pt-BR", {
               hour: "2-digit",
               minute: "2-digit",
               timeZone: "America/Sao_Paulo",
-            })
+            }),
+            marcarNaoLida
           );
         }
       }
@@ -375,7 +387,7 @@ export default function Home() {
   return () => {
     supabase.removeChannel(canal);
   };
-}, [contatoSelecionado, usuario]);
+}, [contatoSelecionado, usuario, chatAberto]);
 
 
 
@@ -402,8 +414,10 @@ export default function Home() {
 
 
   
-  // Atualiza a última mensagem e move a conversa para o topo
-  const atualizarContatoNoTopo = (idContato, ultimaMensagem, hora) => {
+  // Atualiza a última mensagem e move a conversa para o topo.
+  // Se `marcarNaoLida` for true, soma 1 ao contador de não lidas do contato
+  // (usado quando chega mensagem de uma conversa que não está aberta agora).
+  const atualizarContatoNoTopo = (idContato, ultimaMensagem, hora, marcarNaoLida = false) => {
   setContatos((prev) => {
     const lista = [...prev];
     const index = lista.findIndex((c) => c.id === idContato);
@@ -414,6 +428,7 @@ export default function Home() {
       ...lista[index],
       ultimaMensagem,
       hora,
+      naoLidas: marcarNaoLida ? (lista[index].naoLidas || 0) + 1 : lista[index].naoLidas,
     };
 
     lista.splice(index, 1);
@@ -427,6 +442,11 @@ const handleSelecionarContato = async (contato) => {
   setContatoSelecionado(contato);
   setChatAberto(true);
   setMenuOpcoesAberto(false);
+
+  // Ao abrir a conversa, zera o contador de mensagens não lidas dela
+  setContatos((prev) =>
+    prev.map((c) => (c.id === contato.id ? { ...c, naoLidas: 0 } : c))
+  );
 
   // Cria uma entrada extra no histórico: assim o botão "voltar" do celular
   // fecha o chat em vez de sair direto da página
@@ -558,6 +578,47 @@ const handleSelecionarContato = async (contato) => {
   };
 
 
+  // ---------------------------------------------------------------------
+  // Baixar anexo (imagem, txt, docx, etc.)
+  // O atributo `download` do <a> só é respeitado pelo navegador quando o
+  // arquivo é do mesmo domínio. Como o arquivo vem do Supabase Storage
+  // (domínio diferente), o navegador ignora o `download` para tipos que
+  // ele sabe exibir sozinho (imagem, txt, pdf) e só abre em outra aba.
+  // Baixando como blob e criando uma URL local, o download funciona para
+  // qualquer tipo de arquivo.
+  // ---------------------------------------------------------------------
+  const [baixandoArquivo, setBaixandoArquivo] = useState(false);
+
+  const handleBaixarArquivo = async (url, nomeArquivo) => {
+    if (baixandoArquivo) return;
+
+    try {
+      setBaixandoArquivo(true);
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error("Falha ao buscar arquivo");
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = nomeArquivo || "arquivo";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(blobUrl);
+    } catch (erro) {
+      console.log("Erro ao baixar arquivo:", erro);
+      mostrarToast("erro", "Não foi possível baixar o arquivo.");
+    } finally {
+      setBaixandoArquivo(false);
+    }
+  };
 
 
   const handleSair = () => {
@@ -925,19 +986,29 @@ const handleSalvarPerfil = async (e) => {
                       <span className="font-semibold text-gray-800 truncate">
                         {contato.nome_usuario}
                       </span>
-                      <span className="text-xs text-gray-400 shrink-0 ml-2">
-                        {contato.hora || "—"}
+                      <span className="flex flex-col items-end shrink-0 ml-2 gap-1">
+                        <span className="text-xs text-gray-400">
+                          {contato.hora || "—"}
+                        </span>
+                        {/* Bolinha vermelha: há mensagem(ns) não lida(s) */}
+                        {contato.naoLidas > 0 && (
+                          <span
+                            className="h-2.5 w-2.5 rounded-full bg-red-500"
+                            title={`${contato.naoLidas} mensagem(ns) não lida(s)`}
+                          />
+                        )}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500 truncate">
+                      <span
+                        className={`text-sm truncate ${
+                          contato.naoLidas > 0
+                            ? "text-gray-800 font-medium"
+                            : "text-gray-500"
+                        }`}
+                      >
                         {contato.ultimaMensagem || "Iniciar conversa"}
                       </span>
-                      {contato.naoLidas && contato.naoLidas > 0 && (
-                        <span className="ml-2 shrink-0 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                          {contato.naoLidas}
-                        </span>
-                      )}
                     </div>
                   </div>
                 </button>
@@ -1152,27 +1223,29 @@ const handleSalvarPerfil = async (e) => {
                                   />
                                 </a>
 
-                                <a
-                                  href={msg.arquivo_url}
-                                  download={msg.nome_arquivo}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="text-xs underline opacity-70 hover:opacity-100"
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleBaixarArquivo(msg.arquivo_url, msg.nome_arquivo);
+                                  }}
+                                  disabled={baixandoArquivo}
+                                  className="text-xs underline opacity-70 hover:opacity-100 text-left disabled:opacity-40"
                                 >
-                                  Baixar
-                                </a>
+                                  {baixandoArquivo ? "Baixando..." : "Baixar"}
+                                </button>
                               </div>
                             ) : (
 
                             /* Outros arquivos */
-                            <a
-                              href={msg.arquivo_url}
-                              download={msg.nome_arquivo}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex items-center gap-2 underline"
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBaixarArquivo(msg.arquivo_url, msg.nome_arquivo);
+                              }}
+                              disabled={baixandoArquivo}
+                              className="flex items-center gap-2 underline w-full disabled:opacity-40"
                             >
                               <FaPaperclip />
 
@@ -1180,11 +1253,11 @@ const handleSalvarPerfil = async (e) => {
                                 {msg.nome_arquivo}
                               </span>
 
-                              <span className="text-xs opacity-70">
-                                Baixar
+                              <span className="text-xs opacity-70 shrink-0">
+                                {baixandoArquivo ? "Baixando..." : "Baixar"}
                               </span>
 
-                            </a>
+                            </button>
                           )}
 
                         </div>
