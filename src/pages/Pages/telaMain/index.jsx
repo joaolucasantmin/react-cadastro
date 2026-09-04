@@ -164,7 +164,8 @@ export default function Home() {
 
               return {
                 ...contato,
-                ultimaMensagem: ultima.mensagem,
+                ultimaMensagem:
+                  ultima.mensagem || (ultima.arquivo_url ? "📎 Anexo" : ""),
                 hora: new Date(ultima.data_envio).toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -191,7 +192,6 @@ export default function Home() {
         });
 
         setContatos(lista);
-
 
       } catch (erro) {
         console.log("Erro ao carregar contatos:", erro);
