@@ -36,6 +36,9 @@ export default function Home() {
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
+  const [bloqueados, setBloqueados] = useState([]);
+  const [carregandoBloqueios, setCarregandoBloqueios] = useState(false);
+
   const [contatos, setContatos] = useState([]);
   const [pedidosAmizade, setPedidosAmizade] = useState([]);
   const [contatoSelecionado, setContatoSelecionado] = useState(null);
@@ -78,6 +81,64 @@ export default function Home() {
   const mostrarToast = (tipo, mensagem) => {
     setToast({ tipo, mensagem });
   };
+
+
+
+  const buscarBloqueados = async () => {
+    try {
+        setCarregandoBloqueios(true);
+
+        const token = localStorage.getItem("token");
+
+        const { data } = await api.get("/API/bloqueios", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        setBloqueados(data.bloqueados || []);
+
+    } catch (error) {
+        console.error("Erro ao buscar bloqueados:", error);
+
+        mostrarToast(
+            "erro",
+            error.response?.data?.mensagem || "Erro ao buscar usuários bloqueados."
+        );
+    } finally {
+        setCarregandoBloqueios(false);
+    }
+};
+
+
+
+  const bloquearUsuario = async (idUsuario) => {
+    try {
+        const token = localStorage.getItem("token");
+
+        await api.post(
+            `/API/bloqueios/${idUsuario}`,
+            {},
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
+        mostrarToast("sucesso", "Usuário bloqueado com sucesso.");
+
+        buscarBloqueados();
+
+    } catch (error) {
+        mostrarToast(
+            "erro",
+            error.response?.data?.mensagem || "Erro ao bloquear usuário."
+        );
+    }
+};
+
+
 
   useEffect(() => {
     if (!toast) return;
