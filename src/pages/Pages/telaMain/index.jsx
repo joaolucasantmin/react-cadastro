@@ -1138,18 +1138,31 @@ const handleSalvarPerfil = async (e) => {
 
                           {/* Imagem */}
                             {msg.tipo_arquivo?.startsWith("image/") ? (
-                              <a
-                                href={msg.arquivo_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <img
-                                  src={msg.arquivo_url}
-                                  alt={msg.nome_arquivo}
-                                  className="max-w-full max-h-60 rounded-lg object-contain cursor-pointer"
-                                />
-                              </a>
+                              <div className="flex flex-col gap-1">
+                                <a
+                                  href={msg.arquivo_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <img
+                                    src={msg.arquivo_url}
+                                    alt={msg.nome_arquivo}
+                                    className="max-w-full max-h-60 rounded-lg object-contain cursor-pointer"
+                                  />
+                                </a>
+
+                                <a
+                                  href={msg.arquivo_url}
+                                  download={msg.nome_arquivo}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-xs underline opacity-70 hover:opacity-100"
+                                >
+                                  Baixar
+                                </a>
+                              </div>
                             ) : (
 
                             /* Outros arquivos */
