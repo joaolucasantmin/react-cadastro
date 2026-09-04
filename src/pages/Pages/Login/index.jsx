@@ -124,7 +124,7 @@ export default function Login() {
                                                                                                              focus:ring-orange-200"
                         />
                         <button
-                            type="submit"
+                            type="button"
                             onClick={() => setMostrarSenhaLogin(!mostrarSenhaLogin)}
                             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors"
                         >
