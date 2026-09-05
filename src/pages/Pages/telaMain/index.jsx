@@ -63,7 +63,7 @@ export default function Home() {
   const [menuOpcoesAberto, setMenuOpcoesAberto] = useState(false);
   const [modalConfigAberto, setModalConfigAberto] = useState(false);
   const [abaConfig, setAbaConfig] = useState("perfil");
-  const [usuariosBloqueados, setUsuariosBloqueados] = useState([]);
+  //const [usuariosBloqueados, setUsuariosBloqueados] = useState([]); PROVAVELMENTE NAO SERA USADO
 
   const [mostrarAdicionarAmigo, setMostrarAdicionarAmigo] = useState(false);
   const [nomeAmigoBusca, setNomeAmigoBusca] = useState("");
@@ -223,6 +223,12 @@ export default function Home() {
 
               const ultima = mensagens[mensagens.length - 1];
 
+              // Conta quantas mensagens recebidas desse contato ainda não
+              // foram marcadas como lidas no banco
+              const naoLidas = mensagens.filter(
+                (msg) => msg.cod_destinatario === usuario.id && !msg.lida
+              ).length;
+
               return {
                 ...contato,
                 ultimaMensagem:
@@ -233,6 +239,7 @@ export default function Home() {
                   timeZone: "America/Sao_Paulo",
                 }),
                 ultimaData: ultima.data_envio,
+                naoLidas,
               };
             } catch {
               return {
@@ -387,6 +394,14 @@ export default function Home() {
   }, [mensagens]);
 
 
+
+  useEffect(() => {
+    if (modalConfigAberto && abaConfig === "bloqueados") {
+      buscarBloqueados();
+    }
+  }, [modalConfigAberto, abaConfig]);
+
+
     //REALTIME
     useEffect(() => {
   if (!contatoSelecionado || !usuario) return;
@@ -438,6 +453,12 @@ export default function Home() {
             }),
             marcarNaoLida
           );
+
+          // Se a conversa já está aberta na tela, marca a mensagem
+          // recebida como lida imediatamente no banco também
+          if (ehDaConversaAberta && ehParaMim) {
+            handleMarcarComoLida(outroId);
+          }
         }
       }
     )
@@ -504,16 +525,40 @@ const handleSelecionarContato = async (contato) => {
   setChatAberto(true);
   setMenuOpcoesAberto(false);
 
-  // Ao abrir a conversa, zera o contador de mensagens não lidas dela
-  setContatos((prev) =>
-    prev.map((c) => (c.id === contato.id ? { ...c, naoLidas: 0 } : c))
-  );
+  // Ao abrir a conversa, marca as mensagens dela como lidas
+  // (persiste no banco e some a bolinha também em outros dispositivos)
+  handleMarcarComoLida(contato.id);
 
   // Cria uma entrada extra no histórico: assim o botão "voltar" do celular
   // fecha o chat em vez de sair direto da página
   window.history.pushState({ chatAberto: true }, "");
 
   await carregarMensagens(contato.id);
+  };
+
+
+  // Marca no banco as mensagens recebidas de um contato como lidas,
+  // e zera o contador local (bolinha) desse contato
+  const handleMarcarComoLida = async (idContato) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await api.put(
+        `/API/mensagens/lidas/${idContato}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setContatos((prev) =>
+        prev.map((c) => (c.id === idContato ? { ...c, naoLidas: 0 } : c))
+      );
+    } catch (erro) {
+      console.log("Erro ao marcar mensagens como lidas:", erro);
+    }
   };
 
   const handleVoltarParaLista = () => {
@@ -714,36 +759,52 @@ const handleSelecionarContato = async (contato) => {
     }
   };
 
-  const handleBloquearUsuario = async (contato) => {
-    if (!contato) return;
 
-    const confirmar = window.confirm(
-      `Bloquear ${contato.nome_usuario}? Vocês não poderão mais trocar mensagens.`
-    );
-    if (!confirmar) return;
+    const handleBloquearUsuario = async (contato) => {
+      if (!contato) return;
 
-    try {
-      const token = localStorage.getItem("token");
-      // Bloqueio impede novas mensagens e some da lista de contatos.
-      // await api.post(`/API/usuarios/${contato.id}/bloquear`, {}, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-
-      setContatos((prev) => prev.filter((c) => c.id !== contato.id));
-      setUsuariosBloqueados((prev) =>
-        prev.some((u) => u.id === contato.id) ? prev : [...prev, contato]
+      const confirmar = window.confirm(
+        `Bloquear ${contato.nome_usuario}? Vocês não poderão mais trocar mensagens.`
       );
+      if (!confirmar) return;
 
-      if (contatoSelecionado?.id === contato.id) {
-        setContatoSelecionado(null);
-        setChatAberto(false);
+      try {
+        const token = localStorage.getItem("token");
+
+        await api.post(
+          `/API/bloqueios/${contato.id}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        mostrarToast("sucesso", "Usuário bloqueado com sucesso.");
+
+        setContatos((prev) => prev.filter((c) => c.id !== contato.id));
+
+        if (contatoSelecionado?.id === contato.id) {
+          setContatoSelecionado(null);
+          setChatAberto(false);
+        }
+
+        buscarBloqueados();
+
+      } catch (erro) {
+        console.log("Erro ao bloquear usuário:", erro);
+
+        mostrarToast(
+          "erro",
+          erro.response?.data?.mensagem || "Erro ao bloquear usuário."
+        );
+      } finally {
+        setMenuOpcoesAberto(false);
       }
-    } catch (erro) {
-      console.log("Erro ao bloquear usuário:", erro);
-    } finally {
-      setMenuOpcoesAberto(false);
-    }
   };
+
+
 
   const handleExcluirUsuario = async (contato) => {
     if (!contato) return;
@@ -774,16 +835,26 @@ const handleSelecionarContato = async (contato) => {
     }
   };
 
-  const handleDesbloquearUsuario = async (contato) => {
+  const handleDesbloquearUsuario = async (idUsuario) => {
     try {
       const token = localStorage.getItem("token");
-      // await api.delete(`/API/usuarios/${contato.id}/bloquear`, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
 
-      setUsuariosBloqueados((prev) => prev.filter((u) => u.id !== contato.id));
-    } catch (erro) {
-      console.log("Erro ao desbloquear usuário:", erro);
+      await api.delete(`/API/bloqueios/${idUsuario}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      mostrarToast("sucesso", "Usuário desbloqueado com sucesso.");
+
+      buscarBloqueados();
+
+    } catch (error) {
+      mostrarToast(
+        "erro",
+        error.response?.data?.mensagem ||
+        "Erro ao desbloquear usuário."
+      );
     }
   };
 
@@ -1617,44 +1688,58 @@ const handleSalvarPerfil = async (e) => {
               )}
 
               {/* -------- Aba Bloqueados -------- */}
-              {abaConfig === "bloqueados" && (
-                <div className="space-y-2">
-                  {usuariosBloqueados.length === 0 && (
-                    <p className="text-sm text-gray-400 text-center py-6">
-                      Nenhum usuário bloqueado.
-                    </p>
-                  )}
-                  {usuariosBloqueados.map((u) => (
-                    <div
-                      key={u.id}
-                      className="flex items-center justify-between border border-gray-100 rounded-xl px-4 py-3"
-                    >
-                      <div className="flex items-center gap-3">
+                {abaConfig === "bloqueados" && (
+                  <div className="space-y-2">
 
-                      {contatoSelecionado?.foto_perfil ?(
-                        <img
-                          src={contatoSelecionado.foto_perfil}
-                          alt={contatoSelecionado.nome_usuario}
-                          className="h-10 w-10 rounded-full object-cover shrink-0"
-                          />
-                      ) : (
-                        <FaUserCircle className="text-3xl text-gray-300" />
-                        )}
-                        <span className="font-medium text-gray-700">
-                          {u.nome_usuario}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDesbloquearUsuario(u)}
-                        className="text-sm text-orange-500 hover:underline"
-                      >
-                        Desbloquear
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    {carregandoBloqueios ? (
+                      <p className="text-sm text-gray-400 text-center py-6">
+                        Carregando usuários bloqueados...
+                      </p>
+                    ) : bloqueados.length === 0 ? (
+                      <p className="text-sm text-gray-400 text-center py-6">
+                        Nenhum usuário bloqueado.
+                      </p>
+                    ) : (
+                      bloqueados.map((bloqueio) => {
+                        const u = bloqueio.usuarios;
+
+                        return (
+                          <div
+                            key={bloqueio.id}
+                            className="flex items-center justify-between border border-gray-100 rounded-xl px-4 py-3"
+                          >
+                            <div className="flex items-center gap-3">
+
+                              {u?.foto_perfil ? (
+                                <img
+                                  src={u.foto_perfil}
+                                  alt={u.nome_usuario}
+                                  className="h-10 w-10 rounded-full object-cover shrink-0"
+                                />
+                              ) : (
+                                <FaUserCircle className="text-3xl text-gray-300" />
+                              )}
+
+                              <span className="font-medium text-gray-700">
+                                {u?.nome_usuario}
+                              </span>
+
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDesbloquearUsuario(u.id)}
+                              className="text-sm text-orange-500 hover:underline"
+                            >
+                              Desbloquear
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+
+                  </div>
+                )}
 
               {/* -------- Aba Amizades (solicitações pendentes) -------- */}
               {abaConfig === "amizades" && (
