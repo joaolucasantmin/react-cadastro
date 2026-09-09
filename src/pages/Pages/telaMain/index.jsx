@@ -49,6 +49,8 @@ export default function Home() {
   const [texto, setTexto] = useState("");
   const [busca, setBusca] = useState("");
 
+  const fusoHorario = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   // Toast de feedback (sucesso / erro / info), substitui os alert()
   const [toast, setToast] = useState(null); // { tipo: "sucesso" | "erro" | "info", mensagem }
 
@@ -236,7 +238,7 @@ export default function Home() {
                 hora: new Date(ultima.data_envio).toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
                   minute: "2-digit",
-                  timeZone: "America/Sao_Paulo",
+                  timeZone: fusoHorario,
                 }),
                 ultimaData: ultima.data_envio,
                 naoLidas,
@@ -449,7 +451,7 @@ export default function Home() {
             new Date(msg.data_envio).toLocaleTimeString("pt-BR", {
               hour: "2-digit",
               minute: "2-digit",
-              timeZone: "America/Sao_Paulo",
+              timeZone: fusoHorario,
             }),
             marcarNaoLida
           );
@@ -629,7 +631,7 @@ const handleSelecionarContato = async (contato) => {
         new Date().toLocaleTimeString("pt-BR", {
           hour: "2-digit",
           minute: "2-digit",
-          timeZone: "America/Sao_Paulo",
+          timeZone: fusoHorario,
         })
       );
 
@@ -1406,7 +1408,7 @@ const handleSalvarPerfil = async (e) => {
                         {new Date(msg.data_envio).toLocaleTimeString("pt-BR", {
                           hour: "2-digit",
                           minute: "2-digit",
-                          timeZone: "America/Sao_Paulo",
+                          timeZone: fusoHorario,
                         })}
                       </span>
 
