@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import api from '/src/services/api'
 import { useNavigate } from "react-router-dom";
 import supabase from "/src/services/supabase";
-import BotaoInstalar from "./components/BotaoInstalar";
+//import BotaoInstalar from "../../components/BotaoInstalar";
 
 import {
   FaSearch,
