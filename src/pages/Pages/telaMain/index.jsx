@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import api from '/src/services/api'
 import { useNavigate } from "react-router-dom";
 import supabase from "/src/services/supabase";
+import BotaoInstalar from "./components/BotaoInstalar";
 
 import {
   FaSearch,
@@ -65,7 +66,6 @@ export default function Home() {
   const [menuOpcoesAberto, setMenuOpcoesAberto] = useState(false);
   const [modalConfigAberto, setModalConfigAberto] = useState(false);
   const [abaConfig, setAbaConfig] = useState("perfil");
-  //const [usuariosBloqueados, setUsuariosBloqueados] = useState([]); PROVAVELMENTE NAO SERA USADO
 
   const [mostrarAdicionarAmigo, setMostrarAdicionarAmigo] = useState(false);
   const [nomeAmigoBusca, setNomeAmigoBusca] = useState("");
@@ -76,6 +76,7 @@ export default function Home() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [fotoPreview, setFotoPreview] = useState(null);
   const [arquivoFoto, setArquivoFoto] = useState(null);
+  const [eventoInstalacao, setEventoInstalacao] = useState(null);
 
   const scrollRef = useRef(null);
 
@@ -84,6 +85,41 @@ export default function Home() {
     setToast({ tipo, mensagem });
   };
 
+
+
+  useEffect(() => {
+    const capturarEventoInstalacao = (e) => {
+      e.preventDefault();
+      setEventoInstalacao(e);
+    };
+
+    window.addEventListener(
+      "beforeinstallprompt",
+      capturarEventoInstalacao
+    );
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        capturarEventoInstalacao
+      );
+    };
+  }, []);
+
+  //Função botão instalar
+  const instalarApp = async () => {
+    if (!eventoInstalacao) return;
+
+    eventoInstalacao.prompt();
+
+    const resultado = await eventoInstalacao.userChoice;
+
+    if (resultado.outcome === "accepted") {
+      console.log("Chatames instalado!");
+    }
+
+    setEventoInstalacao(null);
+  };
 
 
   const buscarBloqueados = async () => {
@@ -1559,6 +1595,7 @@ const handleSalvarPerfil = async (e) => {
                 { id: "perfil", label: "Perfil" },
                 { id: "bloqueados", label: "Bloqueados" },
                 { id: "amizades", label: "Amizades" },
+                { id: "baixar", label: "Baixar App" },
               ].map((aba) => (
                 <button
                   key={aba.id}
@@ -1807,6 +1844,40 @@ const handleSalvarPerfil = async (e) => {
 
                 </div>
               )}
+
+
+              {/* -------- Aba Baixar App -------- */}
+                {abaConfig === "baixar" && (
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+
+                    <div className="text-5xl mb-4">
+                      📱
+                    </div>
+
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Instalar o Chatames
+                    </h3>
+
+                    <p className="text-sm text-gray-400 mt-2 mb-6 max-w-xs">
+                      Instale o Chatames no seu dispositivo para acessá-lo como um aplicativo.
+                    </p>
+
+                    {eventoInstalacao ? (
+                      <button
+                        type="button"
+                        onClick={instalarApp}
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-3 rounded-xl transition-colors"
+                      >
+                        Baixar
+                      </button>
+                    ) : (
+                      <p className="text-sm text-gray-400">
+                        A instalação não está disponível neste navegador.
+                      </p>
+                    )}
+
+                  </div>
+                )}
 
 
             </div>
