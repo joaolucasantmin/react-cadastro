@@ -18,7 +18,6 @@ import {
   FaEye,
   FaEyeSlash,
   FaTrash,
-  FaCog,
 } from "react-icons/fa";
 import logo from "/src/assets/logo.png";
 
@@ -1256,23 +1255,6 @@ const handleSalvarPerfil = async (e) => {
                 {usuario?.nome_usuario || "Minha conta"}
               </span>
             </button>
-
-          <div className="flex items-center gap-4">
-              <button 
-                type="button"
-                onClick={() =>{
-                  setAbaConfig("perfil");
-                  setModalConfigAberto(true);
-                  window.history.pushState({ modalAberto: true }, "");
-                }}
-                title="Configurações"
-                className="text-gray-400 hover:text-orange-500 transition-colors text-lg"
-              >
-
-                <FaCog />
-              </button>
-              
-           
             <button
               onClick={handleSair}
               className="flex items-center gap-1 text-sm text-gray-500 hover:text-orange-500 transition-colors"
@@ -1281,7 +1263,6 @@ const handleSalvarPerfil = async (e) => {
               Sair
             </button>
           </div>
-          </div> 
         </aside>
 
         {/* ---------------- ÁREA DO CHAT ---------------- */}
