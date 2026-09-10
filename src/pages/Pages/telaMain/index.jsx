@@ -38,7 +38,6 @@ export default function Home() {
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
-  const [confirmacao, setConfirmacao] = useState(null);
   const [bloqueados, setBloqueados] = useState([]);
   const [carregandoBloqueios, setCarregandoBloqueios] = useState(false);
 
@@ -816,11 +815,8 @@ const handleSelecionarContato = async (contato) => {
 
   // ---------------------------------------------------------------------
   // Opções do menu de 3 pontinhos: remover amizade, bloquear e (admin) excluir
-  // A confirmação de "remover" e "bloquear" agora é feita pelo modal
-  // controlado por `confirmacao` (ver JSX), em vez de window.confirm.
-  // Estas funções só executam a ação em si, após o usuário confirmar.
   // ---------------------------------------------------------------------
-  const executarRemocaoAmizade = async (contato) => {
+  const handleRemoverAmizade = async (contato) => {
     if (!contato) return;
 
     try {
@@ -841,49 +837,52 @@ const handleSelecionarContato = async (contato) => {
       console.log("Erro ao remover amizade:", erro);
     } finally {
       setMenuOpcoesAberto(false);
-      setConfirmacao(null);
     }
   };
 
 
-  const executarBloqueio = async (contato) => {
-    if (!contato) return;
+    const handleBloquearUsuario = async (contato) => {
+      if (!contato) return;
 
-    try {
-      const token = localStorage.getItem("token");
+      const confirmar = window.confirm(
+        `Bloquear ${contato.nome_usuario}? Vocês não poderão mais trocar mensagens.`
+      );
+      if (!confirmar) return;
 
-      await api.post(
-        `/API/bloqueios/${contato.id}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
+      try {
+        const token = localStorage.getItem("token");
+
+        await api.post(
+          `/API/bloqueios/${contato.id}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
+        );
+
+        mostrarToast("sucesso", "Usuário bloqueado com sucesso.");
+
+        setContatos((prev) => prev.filter((c) => c.id !== contato.id));
+
+        if (contatoSelecionado?.id === contato.id) {
+          setContatoSelecionado(null);
+          setChatAberto(false);
         }
-      );
 
-      mostrarToast("sucesso", "Usuário bloqueado com sucesso.");
+        buscarBloqueados();
 
-      setContatos((prev) => prev.filter((c) => c.id !== contato.id));
+      } catch (erro) {
+        console.log("Erro ao bloquear usuário:", erro);
 
-      if (contatoSelecionado?.id === contato.id) {
-        setContatoSelecionado(null);
-        setChatAberto(false);
+        mostrarToast(
+          "erro",
+          erro.response?.data?.mensagem || "Erro ao bloquear usuário."
+        );
+      } finally {
+        setMenuOpcoesAberto(false);
       }
-
-      buscarBloqueados();
-
-    } catch (erro) {
-      console.log("Erro ao bloquear usuário:", erro);
-
-      mostrarToast(
-        "erro",
-        erro.response?.data?.mensagem || "Erro ao bloquear usuário."
-      );
-    } finally {
-      setMenuOpcoesAberto(false);
-      setConfirmacao(null);
-    }
   };
 
 
@@ -1281,7 +1280,7 @@ const handleSalvarPerfil = async (e) => {
               <FaSignOutAlt />
               Sair
             </button>
-           </div>
+          </div>
           </div> 
         </aside>
 
@@ -1340,20 +1339,14 @@ const handleSalvarPerfil = async (e) => {
                       <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-20">
                         <button
                           type="button"
-                          onClick={() => {
-                            setConfirmacao({ tipo: "remover", contato: contatoSelecionado });
-                            setMenuOpcoesAberto(false);
-                          }}
+                          onClick={() => handleRemoverAmizade(contatoSelecionado)}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           Remover amizade
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
-                            setConfirmacao({ tipo: "bloquear", contato: contatoSelecionado });
-                            setMenuOpcoesAberto(false);
-                          }}
+                          onClick={() => handleBloquearUsuario(contatoSelecionado)}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           Bloquear usuário
@@ -1948,50 +1941,6 @@ const handleSalvarPerfil = async (e) => {
                 )}
 
 
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ---------------- MODAL DE CONFIRMAÇÃO (bloquear / remover) ---------------- */}
-      {confirmacao && (
-        <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4"
-          onClick={() => setConfirmacao(null)}
-        >
-          <div
-            className="bg-white rounded-2xl w-full max-w-sm p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="font-semibold text-gray-800 text-lg mb-2">
-              {confirmacao.tipo === "bloquear" ? "Bloquear usuário" : "Remover amizade"}
-            </h3>
-
-            <p className="text-sm text-gray-500 mb-6">
-              {confirmacao.tipo === "bloquear"
-                ? `Bloquear ${confirmacao.contato?.nome_usuario}? Vocês não poderão mais trocar mensagens.`
-                : `Remover ${confirmacao.contato?.nome_usuario} da sua lista de contatos?`}
-            </p>
-
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmacao(null)}
-                className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 text-sm font-medium transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  confirmacao.tipo === "bloquear"
-                    ? executarBloqueio(confirmacao.contato)
-                    : executarRemocaoAmizade(confirmacao.contato)
-                }
-                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
-              >
-                Confirmar
-              </button>
             </div>
           </div>
         </div>
