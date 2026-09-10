@@ -86,6 +86,48 @@ export default function Home() {
   };
 
 
+  //Função de CTRL + V 
+  useEffect(() => {
+    const handlePaste = (e) => {
+      if (!contatoSelecionado) return;
+
+      const itens = e.clipboardData?.items;
+
+      if (!itens) return;
+
+      for (const item of itens) {
+        if (item.type.startsWith("image/")) {
+          const arquivo = item.getAsFile();
+
+          if (!arquivo) return;
+
+          setErroArquivo("");
+
+          // Limite de 10 MB
+          if (arquivo.size > 10 * 1024 * 1024) {
+            setErroArquivo("O arquivo não pode ultrapassar 10 MB.");
+            return;
+          }
+
+          setArquivoSelecionado(arquivo);
+
+          // Impede que a imagem seja colada como conteúdo no input
+          e.preventDefault();
+
+          break;
+        }
+      }
+    };
+
+    document.addEventListener("paste", handlePaste);
+
+    return () => {
+      document.removeEventListener("paste", handlePaste);
+    };
+  }, [contatoSelecionado]);
+
+
+
 
   useEffect(() => {
     const capturarEventoInstalacao = (e) => {
