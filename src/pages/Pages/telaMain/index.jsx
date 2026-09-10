@@ -18,6 +18,7 @@ import {
   FaEye,
   FaEyeSlash,
   FaTrash,
+  FaCog,
 } from "react-icons/fa";
 import logo from "/src/assets/logo.png";
 
@@ -37,6 +38,7 @@ export default function Home() {
   const [mostrarNovaSenha, setMostrarNovaSenha] = useState(false);
   const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
+  const [confirmacao, setConfirmacao] = useState(null);
   const [bloqueados, setBloqueados] = useState([]);
   const [carregandoBloqueios, setCarregandoBloqueios] = useState(false);
 
@@ -814,8 +816,11 @@ const handleSelecionarContato = async (contato) => {
 
   // ---------------------------------------------------------------------
   // Opções do menu de 3 pontinhos: remover amizade, bloquear e (admin) excluir
+  // A confirmação de "remover" e "bloquear" agora é feita pelo modal
+  // controlado por `confirmacao` (ver JSX), em vez de window.confirm.
+  // Estas funções só executam a ação em si, após o usuário confirmar.
   // ---------------------------------------------------------------------
-  const handleRemoverAmizade = async (contato) => {
+  const executarRemocaoAmizade = async (contato) => {
     if (!contato) return;
 
     try {
@@ -836,52 +841,49 @@ const handleSelecionarContato = async (contato) => {
       console.log("Erro ao remover amizade:", erro);
     } finally {
       setMenuOpcoesAberto(false);
+      setConfirmacao(null);
     }
   };
 
 
-    const handleBloquearUsuario = async (contato) => {
-      if (!contato) return;
+  const executarBloqueio = async (contato) => {
+    if (!contato) return;
 
-      const confirmar = window.confirm(
-        `Bloquear ${contato.nome_usuario}? Vocês não poderão mais trocar mensagens.`
-      );
-      if (!confirmar) return;
+    try {
+      const token = localStorage.getItem("token");
 
-      try {
-        const token = localStorage.getItem("token");
-
-        await api.post(
-          `/API/bloqueios/${contato.id}`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+      await api.post(
+        `/API/bloqueios/${contato.id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
-        );
-
-        mostrarToast("sucesso", "Usuário bloqueado com sucesso.");
-
-        setContatos((prev) => prev.filter((c) => c.id !== contato.id));
-
-        if (contatoSelecionado?.id === contato.id) {
-          setContatoSelecionado(null);
-          setChatAberto(false);
         }
+      );
 
-        buscarBloqueados();
+      mostrarToast("sucesso", "Usuário bloqueado com sucesso.");
 
-      } catch (erro) {
-        console.log("Erro ao bloquear usuário:", erro);
+      setContatos((prev) => prev.filter((c) => c.id !== contato.id));
 
-        mostrarToast(
-          "erro",
-          erro.response?.data?.mensagem || "Erro ao bloquear usuário."
-        );
-      } finally {
-        setMenuOpcoesAberto(false);
+      if (contatoSelecionado?.id === contato.id) {
+        setContatoSelecionado(null);
+        setChatAberto(false);
       }
+
+      buscarBloqueados();
+
+    } catch (erro) {
+      console.log("Erro ao bloquear usuário:", erro);
+
+      mostrarToast(
+        "erro",
+        erro.response?.data?.mensagem || "Erro ao bloquear usuário."
+      );
+    } finally {
+      setMenuOpcoesAberto(false);
+      setConfirmacao(null);
+    }
   };
 
 
@@ -1255,6 +1257,23 @@ const handleSalvarPerfil = async (e) => {
                 {usuario?.nome_usuario || "Minha conta"}
               </span>
             </button>
+
+          <div className="flex items-center gap-4">
+              <button 
+                type="button"
+                onClick={() =>{
+                  setAbaConfig("perfil");
+                  setModalConfigAberto(true);
+                  window.history.pushState({ modalAberto: true }, "");
+                }}
+                title="Configurações"
+                className="text-gray-400 hover:text-orange-500 transition-colors text-lg"
+              >
+
+                <FaCog />
+              </button>
+              
+           
             <button
               onClick={handleSair}
               className="flex items-center gap-1 text-sm text-gray-500 hover:text-orange-500 transition-colors"
@@ -1262,7 +1281,8 @@ const handleSalvarPerfil = async (e) => {
               <FaSignOutAlt />
               Sair
             </button>
-          </div>
+           </div>
+          </div> 
         </aside>
 
         {/* ---------------- ÁREA DO CHAT ---------------- */}
@@ -1320,14 +1340,20 @@ const handleSalvarPerfil = async (e) => {
                       <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-20">
                         <button
                           type="button"
-                          onClick={() => handleRemoverAmizade(contatoSelecionado)}
+                          onClick={() => {
+                            setConfirmacao({ tipo: "remover", contato: contatoSelecionado });
+                            setMenuOpcoesAberto(false);
+                          }}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           Remover amizade
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleBloquearUsuario(contatoSelecionado)}
+                          onClick={() => {
+                            setConfirmacao({ tipo: "bloquear", contato: contatoSelecionado });
+                            setMenuOpcoesAberto(false);
+                          }}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           Bloquear usuário
@@ -1922,6 +1948,50 @@ const handleSalvarPerfil = async (e) => {
                 )}
 
 
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------- MODAL DE CONFIRMAÇÃO (bloquear / remover) ---------------- */}
+      {confirmacao && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4"
+          onClick={() => setConfirmacao(null)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-sm p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-semibold text-gray-800 text-lg mb-2">
+              {confirmacao.tipo === "bloquear" ? "Bloquear usuário" : "Remover amizade"}
+            </h3>
+
+            <p className="text-sm text-gray-500 mb-6">
+              {confirmacao.tipo === "bloquear"
+                ? `Bloquear ${confirmacao.contato?.nome_usuario}? Vocês não poderão mais trocar mensagens.`
+                : `Remover ${confirmacao.contato?.nome_usuario} da sua lista de contatos?`}
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmacao(null)}
+                className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 text-sm font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  confirmacao.tipo === "bloquear"
+                    ? executarBloqueio(confirmacao.contato)
+                    : executarRemocaoAmizade(confirmacao.contato)
+                }
+                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
+              >
+                Confirmar
+              </button>
             </div>
           </div>
         </div>
