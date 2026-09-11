@@ -84,7 +84,7 @@ export default function Home() {
   // O evento de instalação (beforeinstallprompt) é capturado uma vez, no
   // topo do app (ver InstalacaoProvider em App.jsx) para não perder o
   // evento caso ele dispare enquanto o usuário ainda está no login.
-  const { eventoInstalacao, instalarApp } = useInstalacao();
+  const { eventoInstalacao, instalarApp, appInstalado } = useInstalacao();
 
   const scrollRef = useRef(null);
 
@@ -1917,6 +1917,10 @@ const handleSalvarPerfil = async (e) => {
                       >
                         Baixar
                       </button>
+                    ) : appInstalado ? (
+                      <p className="text-sm text-gray-400">
+                        O Chatames já está instalado neste dispositivo. ✅
+                      </p>
                     ) : (
                       <p className="text-sm text-gray-400">
                         A instalação não está disponível neste navegador.
