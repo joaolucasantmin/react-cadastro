@@ -41,6 +41,7 @@ export default function Home() {
 
   const [confirmarRemocao, setConfirmarRemocao] = useState(null); // contato ou null
   const [confirmarBloqueio, setConfirmarBloqueio] = useState(null); // contato ou null
+  const [confirmarExclusao, setConfirmarExclusao] = useState(null); // contato ou null
   const [bloqueados, setBloqueados] = useState([]);
   const [carregandoBloqueios, setCarregandoBloqueios] = useState(false);
 
@@ -866,22 +867,16 @@ const handleSelecionarContato = async (contato) => {
   };
 
 
-
-  const handleExcluirUsuario = async (contato) => {
-    if (!contato) return;
-
-    const confirmar = window.confirm(
-      `Excluir o usuário ${contato.nome_usuario}? As mensagens serão mantidas, mas o nome dele passará a ser "Usuário excluído".`
-    );
-    if (!confirmar) return;
+  //Exclusão de usuario. APENAS ADMIN
+  const executarExclusaoUsuario = async (contato) => {
+      if (!contato) return;
 
     try {
       const token = localStorage.getItem("token");
-      // Ação exclusiva de admin: o backend deve manter as mensagens e trocar
-      // o nome do usuário para "Usuário excluído" em vez de apagar tudo.
-      // await api.delete(`/API/usuarios/${contato.id}`, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
+
+      await api.delete(`/API/usuarios/${contato.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setContatos((prev) => prev.filter((c) => c.id !== contato.id));
 
@@ -891,10 +886,17 @@ const handleSelecionarContato = async (contato) => {
       }
     } catch (erro) {
       console.log("Erro ao excluir usuário:", erro);
+
+      mostrarToast(
+        "erro",
+        erro.response?.data?.mensagem || "Erro ao excluir usuário."
+      );
     } finally {
       setMenuOpcoesAberto(false);
+      setConfirmarExclusao(null);
     }
   };
+  
 
   const handleDesbloquearUsuario = async (idUsuario) => {
     try {
@@ -1340,7 +1342,10 @@ const handleSalvarPerfil = async (e) => {
                         {usuario?.cargo === "admin" && (
                           <button
                             type="button"
-                            onClick={() => handleExcluirUsuario(contatoSelecionado)}
+                            onClick={() => {
+                              setConfirmarExclusao(contatoSelecionado);
+                              setMenuOpcoesAberto(false);
+                            }}
                             className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50"
                           >
                             Excluir usuário
@@ -2011,6 +2016,48 @@ const handleSalvarPerfil = async (e) => {
           </div>
         </div>
       )}
+
+
+
+      {/* ---------------- MODAL DE CONFIRMAÇÃO: EXCLUIR USUÁRIO ---------------- */}
+      {confirmarExclusao && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4"
+          onClick={() => setConfirmarExclusao(null)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-sm p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-semibold text-gray-800 text-lg mb-2">
+              Excluir usuário
+            </h3>
+
+            <p className="text-sm text-gray-500 mb-6">
+              Deseja realmente excluir o usuário {confirmarExclusao?.nome_usuario}? As mensagens serão mantidas, mas o nome dele passará a ser "Usuário excluído".
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setConfirmarExclusao(null)}
+                className="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 text-sm font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => executarExclusaoUsuario(confirmarExclusao)}
+                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
 
       {/* ---------------- TOAST ---------------- */}
       {toast && (
