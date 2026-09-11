@@ -1152,7 +1152,7 @@ const handleSalvarPerfil = async (e) => {
           <div className="flex-1 overflow-y-auto overscroll-contain">
             {contatosFiltrados.length === 0 && (
               <p className="text-center text-sm text-gray-400 mt-6">
-                Nenhuma conversa encontrada.
+                Carregando contatos..
               </p>
             )}
 
@@ -2034,7 +2034,7 @@ const handleSalvarPerfil = async (e) => {
             </h3>
 
             <p className="text-sm text-gray-500 mb-6">
-              Deseja realmente excluir o usuário {confirmarExclusao?.nome_usuario}? As mensagens serão mantidas, mas o nome dele passará a ser "Usuário excluído".
+              Deseja realmente excluir o usuário {confirmarExclusao?.nome_usuario}?
             </p>
 
             <div className="flex justify-end gap-3">
