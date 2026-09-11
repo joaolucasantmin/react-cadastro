@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import api from '/src/services/api'
 import { useNavigate } from "react-router-dom";
 import supabase from "/src/services/supabase";
+import { useInstalacao } from "/src/contexts/InstalacaoContext";
 //import BotaoInstalar from "../../components/BotaoInstalar";
 
 import {
@@ -79,7 +80,11 @@ export default function Home() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [fotoPreview, setFotoPreview] = useState(null);
   const [arquivoFoto, setArquivoFoto] = useState(null);
-  const [eventoInstalacao, setEventoInstalacao] = useState(null);
+
+  // O evento de instalação (beforeinstallprompt) é capturado uma vez, no
+  // topo do app (ver InstalacaoProvider em App.jsx) para não perder o
+  // evento caso ele dispare enquanto o usuário ainda está no login.
+  const { eventoInstalacao, instalarApp } = useInstalacao();
 
   const scrollRef = useRef(null);
 
@@ -129,42 +134,6 @@ export default function Home() {
     };
   }, [contatoSelecionado]);
 
-
-
-
-  useEffect(() => {
-    const capturarEventoInstalacao = (e) => {
-      e.preventDefault();
-      setEventoInstalacao(e);
-    };
-
-    window.addEventListener(
-      "beforeinstallprompt",
-      capturarEventoInstalacao
-    );
-
-    return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        capturarEventoInstalacao
-      );
-    };
-  }, []);
-
-  //Função botão instalar
-  const instalarApp = async () => {
-    if (!eventoInstalacao) return;
-
-    eventoInstalacao.prompt();
-
-    const resultado = await eventoInstalacao.userChoice;
-
-    if (resultado.outcome === "accepted") {
-      console.log("Chatames instalado!");
-    }
-
-    setEventoInstalacao(null);
-  };
 
 
   const buscarBloqueados = async () => {
