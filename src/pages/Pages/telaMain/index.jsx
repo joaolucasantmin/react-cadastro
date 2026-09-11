@@ -878,6 +878,8 @@ const handleSelecionarContato = async (contato) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      mostrarToast("sucesso", "Usuário excluído com sucesso.");
+
       setContatos((prev) => prev.filter((c) => c.id !== contato.id));
 
       if (contatoSelecionado?.id === contato.id) {
