@@ -827,11 +827,14 @@ const handleSelecionarContato = async (contato) => {
 
     try {
       const token = localStorage.getItem("token");
-      // Remove apenas da lista de contatos. O usuário continua podendo
+
+      // Remove de fato a amizade no backend. O usuário continua podendo
       // ser encontrado na pesquisa e uma nova amizade pode ser criada depois.
-      // await api.delete(`/API/amizades/${contato.id}`, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
+      await api.delete(`/API/amizades/${contato.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      mostrarToast("sucesso", "Amizade removida.");
 
       setContatos((prev) => prev.filter((c) => c.id !== contato.id));
 
@@ -841,6 +844,11 @@ const handleSelecionarContato = async (contato) => {
       }
     } catch (erro) {
       console.log("Erro ao remover amizade:", erro);
+
+      mostrarToast(
+        "erro",
+        erro.response?.data?.mensagem || "Erro ao remover amizade."
+      );
     } finally {
       setMenuOpcoesAberto(false);
       setConfirmarRemocao(null);
