@@ -133,7 +133,12 @@ export default function Login() {
                     </div>
 
 
-
+                    {/* Link esqueci senha */}
+                    <div className="text-right -mt-2">
+                         <Link to="/esqueci-senha" className="text-sm text-orange-500 hover:underline">
+                             Esqueci minha senha
+                        </Link>
+                    </div>
                     {/* Botão */}
                     <button
                         type="submit"

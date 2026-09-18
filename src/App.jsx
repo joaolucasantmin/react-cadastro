@@ -3,6 +3,8 @@ import Cadastro from "./pages/Pages/Cadastro";
 import Login from "./pages/Pages/Login";
 import TelaMain from "./pages/Pages/telaMain";
 import Verificacao from "./pages/Pages/Verificacao";
+import EsqueciSenha from "./pages/Pages/EsqueciSenha";
+import ResetarSenha from "./pages/Pages/ResetarSenha";
 import { InstalacaoProvider } from "./contexts/InstalacaoContext";
 
 function RotaInicial() {
@@ -39,12 +41,13 @@ function App() {
 
           {/* Login */}
           <Route path="/login" element={<Login />} />
-
+          <Route path="/verificacao" element={<Verificacao />} />
+          <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+          <Route path="/resetar-senha/:token" element={<ResetarSenha />} />
           {/* Cadastro */}
           <Route path="/cadastro" element={<Cadastro />} />
 
-          <Route path="/verificacao" element={<Verificacao />} />
-
+         
           {/* Home protegida */}
           <Route
             path="/home"
