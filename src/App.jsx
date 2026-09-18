@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Cadastro from "./pages/Pages/Cadastro";
 import Login from "./pages/Pages/Login";
 import TelaMain from "./pages/Pages/telaMain";
+import Verificacao from "./pages/Pages/Verificacao";
 import { InstalacaoProvider } from "./contexts/InstalacaoContext";
 
 function RotaInicial() {
@@ -41,6 +42,8 @@ function App() {
 
           {/* Cadastro */}
           <Route path="/cadastro" element={<Cadastro />} />
+
+          <Route path="/verificacao" element={<Verificacao />} />
 
           {/* Home protegida */}
           <Route

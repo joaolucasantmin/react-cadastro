@@ -63,15 +63,18 @@ const handleSubmit = async (e) => {
     };
 
     try {
-        await api.post("/API/cadastro", dados);
+    await api.post("/API/cadastro", dados);
 
-        mostrarToast("sucesso", "Cadastro realizado!");
+    // Envia o OTP logo após o cadastro
+    await api.post("/API/otp/send", { email });
 
-        setTimeout(() => {
-            navigate("/login");
-        }, 1000);
+    mostrarToast("sucesso", "Código enviado para seu e-mail!");
 
-    } catch (error) {
+    setTimeout(() => {
+        navigate("/verificacao", { state: { email } });
+    }, 1000);
+
+} catch (error) {
 
         if (error.response) {
             const mensagem = error.response.data.error;
