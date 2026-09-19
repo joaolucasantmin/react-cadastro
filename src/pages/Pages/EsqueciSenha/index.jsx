@@ -68,7 +68,7 @@ export default function EsqueciSenha() {
               required
               value={identificador}
               onChange={(e) => setIdentificador(e.target.value.toLowerCase())}
-              placeholder="Seu e-mail ou nome de usuário..."
+              placeholder="Seu e-mail..."
               className="w-full rounded-xl border border-gray-200 py-3 pl-11 pr-4 outline-none
                          focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
             />
