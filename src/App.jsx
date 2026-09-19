@@ -3,7 +3,6 @@ import Cadastro from "./pages/Pages/Cadastro";
 import Login from "./pages/Pages/Login";
 import TelaMain from "./pages/Pages/telaMain";
 import EsqueciSenha from "./pages/Pages/EsqueciSenha";
-import ResetarSenha from "./pages/Pages/ResetarSenha";
 import AdminSolicitacoesSenha from "./pages/Pages/AdminSolicitacoesSenha";
 import { InstalacaoProvider } from "./contexts/InstalacaoContext";
 
@@ -42,7 +41,6 @@ function App() {
           {/* Login */}
           <Route path="/login" element={<Login />} />
           <Route path="/esqueci-senha" element={<EsqueciSenha />} />
-          <Route path="/resetar-senha/:token" element={<ResetarSenha />} />
           {/* Cadastro */}
           <Route path="/cadastro" element={<Cadastro />} />
 
