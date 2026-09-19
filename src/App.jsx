@@ -2,9 +2,9 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Cadastro from "./pages/Pages/Cadastro";
 import Login from "./pages/Pages/Login";
 import TelaMain from "./pages/Pages/telaMain";
-import Verificacao from "./pages/Pages/Verificacao";
 import EsqueciSenha from "./pages/Pages/EsqueciSenha";
 import ResetarSenha from "./pages/Pages/ResetarSenha";
+import AdminSolicitacoesSenha from "./pages/Pages/AdminSolicitacoesSenha";
 import { InstalacaoProvider } from "./contexts/InstalacaoContext";
 
 function RotaInicial() {
@@ -41,7 +41,6 @@ function App() {
 
           {/* Login */}
           <Route path="/login" element={<Login />} />
-          <Route path="/verificacao" element={<Verificacao />} />
           <Route path="/esqueci-senha" element={<EsqueciSenha />} />
           <Route path="/resetar-senha/:token" element={<ResetarSenha />} />
           {/* Cadastro */}
@@ -54,6 +53,16 @@ function App() {
             element={
               <RotaProtegida>
                 <TelaMain />
+              </RotaProtegida>
+            }
+          />
+
+          {/* Painel do admin: solicitações de troca de senha */}
+          <Route
+            path="/admin/solicitacoes-senha"
+            element={
+              <RotaProtegida>
+                <AdminSolicitacoesSenha />
               </RotaProtegida>
             }
           />

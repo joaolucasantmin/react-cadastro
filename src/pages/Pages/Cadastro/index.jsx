@@ -62,15 +62,15 @@ const handleSubmit = async (e) => {
     };
 
     try {
-    await api.post("/API/cadastro", dados);
+    const { data } = await api.post("/API/cadastro", dados);
 
-    // Envia o OTP logo após o cadastro
-    await api.post("/API/otp/send", { email });
+    // Login automático: o cadastro já retorna o token, sem precisar verificar e-mail
+    localStorage.setItem("token", data.token);
 
-    mostrarToast("sucesso", "Código enviado para seu e-mail!");
+    mostrarToast("sucesso", "Conta criada com sucesso!");
 
     setTimeout(() => {
-        navigate("/verificacao", { state: { email } });
+        navigate("/home");
     }, 1000);
 
 } catch (error) {

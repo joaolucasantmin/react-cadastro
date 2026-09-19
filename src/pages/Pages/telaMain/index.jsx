@@ -20,6 +20,7 @@ import {
   FaEyeSlash,
   FaTrash,
   FaCog,
+  FaKey,
 } from "react-icons/fa";
 import logo from "/src/assets/logo.png";
 
@@ -1255,7 +1256,18 @@ const handleSalvarPerfil = async (e) => {
 
                 <FaCog />
               </button>
-              
+
+              {usuario?.cargo === "admin" && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/solicitacoes-senha")}
+                  title="Solicitações de troca de senha"
+                  className="text-gray-400 hover:text-orange-500 transition-colors text-lg"
+                >
+                  <FaKey />
+                </button>
+              )}
+
            
             <button
               onClick={handleSair}
