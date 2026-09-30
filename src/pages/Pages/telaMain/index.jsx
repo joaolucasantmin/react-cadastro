@@ -336,7 +336,7 @@ export default function Home() {
         setPedidosAmizade(response.data.pedidos);
 
       } catch(erro) {
-        console.log("Erro ao carregar pedidos de amizade: ", erro);
+        console.log("Erro ao carregar pedidos de conexão: ", erro);
       }
     };
 
@@ -401,7 +401,7 @@ export default function Home() {
         console.log("Erro ao recusar pedido de conexão: ", erro);
         mostrarToast(
           "erro",
-          erro.response?.data?.mensagem || "Erro ao recusar pedido de amizade."
+          erro.response?.data?.mensagem || "Erro ao recusar pedido de conexão."
         );
       }
     };
@@ -1966,7 +1966,7 @@ const handleSalvarPerfil = async (e) => {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="font-semibold text-gray-800 text-lg mb-2">
-              Remover amizade
+              Remover conexão
             </h3>
 
             <p className="text-sm text-gray-500 mb-6">
