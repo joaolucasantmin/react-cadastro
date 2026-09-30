@@ -1660,7 +1660,7 @@ const handleSalvarPerfil = async (e) => {
               {[
                 { id: "perfil", label: "Perfil" },
                 { id: "bloqueados", label: "Bloqueados" },
-                { id: "amizades", label: "Amizades" },
+                { id: "amizades", label: "Conexões" },
                 { id: "baixar", label: "Baixar App" },
               ].map((aba) => (
                 <button
@@ -1852,7 +1852,7 @@ const handleSalvarPerfil = async (e) => {
 
                   {pedidosAmizade.length === 0 ? (
                     <p className="text-sm text-gray-400 text-center py-6">
-                      Nenhuma solicitação de amizade pendente.
+                      Nenhuma solicitação de conexão pendente.
                     </p>
                   ) : (
                     pedidosAmizade.map((pedido) => (
