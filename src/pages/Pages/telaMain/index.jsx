@@ -367,10 +367,10 @@ export default function Home() {
 
         
       } catch (erro) {
-        console.log("Erro ao aceitar pedido de amizade: ", erro);
+        console.log("Erro ao aceitar pedido de conexão: ", erro);
         mostrarToast(
           "erro",
-          erro.response?.data?.mensagem || "Erro ao aceitar pedido de amizade."
+          erro.response?.data?.mensagem || "Erro ao aceitar pedido de conexão."
         );
       }
     };
@@ -398,7 +398,7 @@ export default function Home() {
 
 
       } catch (erro) {
-        console.log("Erro ao recusar pedido de amizade: ", erro);
+        console.log("Erro ao recusar pedido de conexão: ", erro);
         mostrarToast(
           "erro",
           erro.response?.data?.mensagem || "Erro ao recusar pedido de amizade."
@@ -805,7 +805,7 @@ const handleSelecionarContato = async (contato) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      mostrarToast("sucesso", "Amizade removida.");
+      mostrarToast("sucesso", "Conexão removida.");
 
       setContatos((prev) => prev.filter((c) => c.id !== contato.id));
 
@@ -814,11 +814,11 @@ const handleSelecionarContato = async (contato) => {
         setChatAberto(false);
       }
     } catch (erro) {
-      console.log("Erro ao remover amizade:", erro);
+      console.log("Erro ao remover conexão:", erro);
 
       mostrarToast(
         "erro",
-        erro.response?.data?.mensagem || "Erro ao remover amizade."
+        erro.response?.data?.mensagem || "Erro ao remover conexão."
       );
     } finally {
       setMenuOpcoesAberto(false);
@@ -968,17 +968,17 @@ const handleSelecionarContato = async (contato) => {
       }
     );
 
-    mostrarToast("sucesso", "Pedido de amizade enviado!");
+    mostrarToast("sucesso", "Pedido de conexão enviado!");
     setNomeAmigoBusca("");
     setMostrarAdicionarAmigo(false);
 
     } catch (erro) {
 
-    console.log("Erro ao enviar pedido de amizade:", erro);
+    console.log("Erro ao enviar pedido de conexão:", erro);
 
     mostrarToast(
       "erro",
-      erro.response?.data?.mensagem || "Erro ao enviar pedido de amizade."
+      erro.response?.data?.mensagem || "Erro ao enviar pedido de conexão."
     );
   }
 
@@ -1341,7 +1341,7 @@ const handleSalvarPerfil = async (e) => {
                           }}
                           className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
-                          Remover amizade
+                          Remover conexão
                         </button>
                         <button
                           type="button"
@@ -1879,7 +1879,7 @@ const handleSalvarPerfil = async (e) => {
                           </p>
 
                           <p className="text-xs text-gray-400">
-                            Enviou uma solicitação de amizade
+                            Enviou uma solicitação de conexão
                           </p>
 
                           {/* Botões */}
